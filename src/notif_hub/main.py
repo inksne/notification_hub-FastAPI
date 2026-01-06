@@ -1,9 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from contextlib import asynccontextmanager
 
+import logging
+import asyncio
+import uvicorn
+
 from .database.database import create_db_and_tables
+from .templates import templates_router
+from .bot import bot, dp, commands_router
 
 
 @asynccontextmanager
@@ -12,7 +17,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI('Notification Hub', lifespan=lifespan)
+app = FastAPI(lifespan=lifespan)
 
 
 app.add_middleware(
@@ -22,3 +27,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(templates_router)
+
+
+
+async def start_bot():
+    logging.basicConfig(level=logging.INFO)
+    await dp.start_polling(bot)
+
+
+async def main():
+    dp.include_router(commands_router)
+    uvicorn_config = uvicorn.Config("src.notif_hub.main:app", host="0.0.0.0", port=8000)
+    server = uvicorn.Server(uvicorn_config)
+
+    await asyncio.gather(start_bot(), server.serve())
+
+
+if __name__ == '__main__':
+    try:
+        asyncio.run(main())
+
+    except KeyboardInterrupt:
+        exit(0)
