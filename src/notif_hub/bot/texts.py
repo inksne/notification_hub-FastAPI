@@ -4,6 +4,9 @@ from aiogram.utils import markdown
 
 
 def generate_start_text(msg: types.Message) -> str:
+    if not msg.from_user:   # mypy
+        return ''
+
     start_text = markdown.text(
         f'Приветствую, {markdown.hbold(msg.from_user.full_name)}! 👋',
         f'Данный бот предназначен для получения сообщений от пользователя через веб-сервис {markdown.hbold('Notification Hub')}.',
@@ -24,6 +27,16 @@ def generate_help_text() -> str:
     )
 
     return help_text
+
+
+def generate_notify_text(message: str) -> str:
+    notify_text = markdown.text(
+        'Вам пришло сообщение с сайта Notificaton Hub:',
+        f'{message}',
+        sep='\n'
+    )
+
+    return notify_text
 
 
 internal_error_text = "Произошла неизвестная ошибка. Повторите попытку позже. ❌"
