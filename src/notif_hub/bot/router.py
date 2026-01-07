@@ -7,6 +7,8 @@ import logging
 
 from .texts import generate_start_text, generate_help_text, internal_error_text
 from ..config import configure_logging
+from ..database.database import get_async_session
+from ..database.managers import db_manager
 
 
 
@@ -20,9 +22,16 @@ logger = logging.getLogger(__name__)
 @router.message(CommandStart())
 async def handle_start(msg: types.Message) -> None:
     try:
+        if not msg.bot or not msg.from_user:    # mypy
+            return
+
         await msg.bot.send_chat_action(chat_id=msg.chat.id, action=ChatAction.TYPING)
 
-        await msg.answer(generate_start_text(msg), ParseMode.HTML)
+        async for session in get_async_session():
+            if not await db_manager.get_chat_id(username=msg.from_user.username, session=session):
+                await db_manager.add_chat_id(chat_id=msg.chat.id, username=msg.from_user.username, session=session)
+
+        await msg.answer(text=generate_start_text(msg), parse_mode=ParseMode.HTML)
 
     except Exception as e:
         logger.error(e)
@@ -32,9 +41,16 @@ async def handle_start(msg: types.Message) -> None:
 @router.message(Command('help'))
 async def handle_help(msg: types.Message) -> None:
     try:
+        if not msg.bot or not msg.from_user:    # mypy
+            return
+
         await msg.bot.send_chat_action(chat_id=msg.chat.id, action=ChatAction.TYPING)
 
-        await msg.answer(generate_help_text(), ParseMode.HTML)
+        async for session in get_async_session():
+            if not await db_manager.get_chat_id(username=msg.from_user.username, session=session):
+                await db_manager.add_chat_id(chat_id=msg.chat.id, username=msg.from_user.username, session=session)
+
+        await msg.answer(text=generate_help_text(), parse_mode=ParseMode.HTML)
 
     except Exception as e:
         logger.error(e)
