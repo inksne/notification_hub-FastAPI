@@ -9,6 +9,7 @@ import uvicorn
 from .database.database import create_db_and_tables
 from .templates import templates_router
 from .bot import bot, dp, commands_router
+from .api import telegram_router
 
 
 @asynccontextmanager
@@ -29,6 +30,7 @@ app.add_middleware(
 )
 
 app.include_router(templates_router)
+app.include_router(telegram_router)
 
 
 
