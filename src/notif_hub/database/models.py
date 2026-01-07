@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, String, Text, JSON
+from sqlalchemy import ForeignKey, String, Text, Integer, ARRAY
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -21,9 +21,16 @@ class Notification(Base):
     __tablename__ = 'notifications'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    channel: Mapped[str] = mapped_column(String(32), nullable=False)
+    channels: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
 
     user: Mapped['User'] = relationship('User', back_populates='notifications')
+
+
+class Chat_id(Base):
+    __tablename__ = 'chat_ids'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    chat_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    username: Mapped[str] = mapped_column(String(32), nullable=False)
