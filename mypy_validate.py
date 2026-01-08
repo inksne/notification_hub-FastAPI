@@ -9,6 +9,7 @@ complete_count = time_count = 0
 
 def run_mypy_checks():
     files = [
+        ('channels_handler.py', 'src/notif_hub/api/channels_handler.py'),
         ('telegram_handler.py', 'src/notif_hub/api/telegram_handler.py'),
         ("managers.py", "src/notif_hub/database/managers.py"),
         ("bot_router.py", "src/notif_hub/bot/router.py"),
