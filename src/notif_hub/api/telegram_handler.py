@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from starlette import status
 from aiogram.exceptions import TelegramForbiddenError, TelegramRetryAfter
 
 import logging
@@ -21,24 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 
-'''
-Входящий json:
-{
-  "messages": {
-    "telegram": '...',
-    "email": '...',
-  },
-  "channels": ["telegram", "email"],
-  "targets": {
-    'telegram': '123456789,
-    'email': 'email@example.com'
-  }
-}
-'''
-
-
-
-@router.post('/telegram')
+@router.post('/telegram', status_code=status.HTTP_204_NO_CONTENT)
 async def handle_telegram_notify(data: TelegramHandlerModel) -> None:
     try:
         async for session in get_async_session():
