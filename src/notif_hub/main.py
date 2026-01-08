@@ -9,7 +9,7 @@ import uvicorn
 from .database.database import create_db_and_tables
 from .templates import templates_router
 from .bot import bot, dp, commands_router
-from .api import telegram_router
+from .api import channels_router, telegram_router
 
 
 @asynccontextmanager
@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(title='Notification Hub', lifespan=lifespan)
 
 
 app.add_middleware(
@@ -30,6 +30,7 @@ app.add_middleware(
 )
 
 app.include_router(templates_router)
+app.include_router(channels_router)
 app.include_router(telegram_router)
 
 
