@@ -81,6 +81,51 @@
     }
     textarea { min-height: 120px; resize: vertical; }
     .row { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .channel-layout {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: auto 1fr;
+      align-items: start;
+    }
+    .channel-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--bg) 70%, transparent);
+      min-width: 180px;
+    }
+    .channel-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .channel-option input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .channel-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .channel-fields label {
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+    .channel-fields label:has(input:disabled) {
+      opacity: 0.4;
+    }
+    .channel-fields input:disabled {
+      cursor: not-allowed;
+      background: color-mix(in srgb, var(--bg) 50%, transparent);
+    }
     .muted { color: var(--muted); font-size: 13px; }
     .pill {
       display: inline-flex;
@@ -159,36 +204,46 @@
           <span class="muted">Можно использовать простой текст или markdown.</span>
         </label>
 
-        <div class="row">
-          <label>
-            Канал
-            <select name="channel" id="channel" required>
-              <option value="" disabled selected>Выберите канал</option>
-              <option value="telegram">Telegram</option>
-              <option value="email">Email</option>
-              <option value="webhook">Webhook</option>
-            </select>
-            <span class="muted">Куда отправить сообщение?</span>
-          </label>
+        <div class="channel-layout">
+          <div>
+            <div class="muted" style="margin-bottom:6px;">Каналы</div>
+            <div class="channel-list" id="channel-list">
+              <label class="channel-option">
+                <input type="checkbox" name="channels" value="telegram">
+                Telegram
+              </label>
+              <label class="channel-option">
+                <input type="checkbox" name="channels" value="email">
+                Email
+              </label>
+              <label class="channel-option">
+                <input type="checkbox" name="channels" value="webhook">
+                Webhook
+              </label>
+            </div>
+            <span class="muted">Можно выбрать один или несколько каналов.</span>
+          </div>
 
-          <label data-field="email" class="hidden">
-            Email адрес
-            <input type="email" name="email_to" id="email_to" placeholder="name@example.com">
-            <span class="muted">Почтовый ящик получателя.</span>
-          </label>
+          <div class="channel-fields">
+            <label data-field="telegram">
+              Telegram аккаунт
+              <input type="text" name="telegram_to" id="telegram_to" placeholder="@username" disabled>
+              <span class="muted">Пользователь, группа или канал.</span>
+              <span class="muted">Важно: пользователь должен начать диалог с ботом, чтобы получить сообщение.</span>
+            </label>
 
-          <label data-field="telegram" class="hidden">
-            Telegram аккаунт
-            <input type="text" name="telegram_to" id="telegram_to" placeholder="@username">
-            <span class="muted">Пользователь, группа или канал.</span>
-            <span class="muted">Важно: пользователь должен начать диалог с ботом, чтобы получить сообщение.</span>
-          </label>
+            <label data-field="email">
+              Email адрес
+              <input type="email" name="email_to" id="email_to" placeholder="name@example.com" disabled>
+              <span class="muted">Почтовый ящик получателя.</span>
+            </label>
 
-          <label data-field="webhook" class="hidden">
-            Webhook URL
-            <input type="url" name="webhook_url" id="webhook_url" placeholder="https://example.com/webhook">
-            <span class="muted">Доступная извне HTTPS-точка.</span>
-          </label>
+            <label data-field="webhook">
+              Webhook URL
+              <input type="url" name="webhook_url" id="webhook_url" placeholder="https://example.com/webhook" disabled>
+              <span class="muted">Доступная извне HTTPS-точка.</span>
+            </label>
+          </div>
         </div>
 
         <div class="actions">
@@ -208,8 +263,10 @@
   <script>
     (() => {
       const form = document.getElementById("send-form");
-      const channel = document.getElementById("channel");
+      const channelList = document.getElementById("channel-list");
+      const channelCheckboxes = [...channelList.querySelectorAll('input[type="checkbox"]')];
       const status = document.getElementById("status");
+      const messageInput = document.getElementById("message");
       const fieldMap = {
         email: document.querySelector('[data-field="email"]'),
         telegram: document.querySelector('[data-field="telegram"]'),
@@ -217,34 +274,101 @@
       };
 
       function updateFields() {
-        const value = channel.value;
+        const selected = channelCheckboxes.filter(cb => cb.checked).map(cb => cb.value);
         Object.entries(fieldMap).forEach(([key, el]) => {
           const input = el.querySelector("input");
-          const visible = key === value;
-          el.classList.toggle("hidden", !visible);
+          const visible = selected.includes(key);
+          input.disabled = !visible;
           input.required = visible;
+          if (!visible) {
+            input.value = "";
+          }
         });
-        status.textContent = value
-          ? `Канал выбран: ${value}. Заполните соответствующее поле.`
+        status.textContent = selected.length
+          ? `Выбрано каналов: ${selected.join(", ")}. Заполните обязательные поля.`
           : "Готово к отправке. Выберите канал, чтобы увидеть обязательные поля.";
-      }
-
-      function handleSubmit(event) {
-        if (!channel.value) {
-          status.textContent = "Пожалуйста, выберите канал перед отправкой.";
-          status.style.color = "var(--danger)";
-          event.preventDefault();
-          return;
-        }
-        status.textContent = "Отправляем…";
         status.style.color = "var(--muted)";
       }
 
-      channel.addEventListener("change", updateFields);
+      async function handleSubmit(event) {
+        event.preventDefault();
+
+        const hasSelection = channelCheckboxes.some(cb => cb.checked);
+        if (!hasSelection) {
+          status.textContent = "Пожалуйста, выберите хотя бы один канал.";
+          status.style.color = "var(--danger)";
+          return;
+        }
+
+        if (!form.reportValidity()) {
+          return;
+        }
+
+        status.textContent = "Отправляем…";
+        status.style.color = "var(--muted)";
+
+        const selected = channelCheckboxes.filter(cb => cb.checked).map(cb => cb.value);
+
+        const payload = {
+          messages: {},
+          channels: selected,
+          targets: {}
+        };
+
+        const baseMessage = messageInput.value;
+
+        selected.forEach(channel => {
+          payload.messages[channel] = baseMessage;
+
+          if (channel === "telegram") {
+            const input = fieldMap.telegram.querySelector("input");
+            if (input.value) {
+              payload.targets.telegram = input.value;
+            }
+          }
+
+          if (channel === "email") {
+            const input = fieldMap.email.querySelector("input");
+            if (input.value) {
+              payload.targets.email = input.value;
+            }
+          }
+
+          if (channel === "webhook") {
+            const input = fieldMap.webhook.querySelector("input");
+            if (input.value) {
+              payload.targets.webhook = input.value;
+            }
+          }
+        });
+
+        try {
+          const response = await fetch("/api/v1/channels", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            throw new Error(`Ошибка отправки: ${response.status}`);
+          }
+
+          status.textContent = "Уведомление успешно отправлено.";
+          status.style.color = "var(--accent)";
+        } catch (e) {
+          console.error(e);
+          status.textContent = "Не удалось отправить уведомление. Попробуйте ещё раз позже.";
+          status.style.color = "var(--danger)";
+        }
+      }
+
+      channelCheckboxes.forEach(cb => cb.addEventListener("change", updateFields));
       form.addEventListener("submit", handleSubmit);
       form.addEventListener("reset", () => {
         setTimeout(() => {
-          channel.value = "";
+          channelCheckboxes.forEach(cb => { cb.checked = false; });
           updateFields();
           status.textContent = "Форма очищена. Выберите канал, чтобы продолжить.";
           status.style.color = "var(--muted)";
@@ -257,4 +381,3 @@
   {% endblock %}
 </body>
 </html>
-
