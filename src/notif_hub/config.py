@@ -25,7 +25,7 @@ class DBSettings(BaseSettings):
 db_settings = DBSettings()
 
 
-def configure_logging(level: int = logging.INFO):
+def configure_logging(level: int = logging.INFO) -> None:
     logging.basicConfig(
         level=level,
         datefmt="%Y-%m-%d %H:%M:%S",
