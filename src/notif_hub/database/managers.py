@@ -1,9 +1,9 @@
-from sqlalchemy import extract
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
 
-from .models import Chat_id
+from typing import Sequence
+
+from .models import Chat_id, Notification
 
 
 
@@ -41,6 +41,39 @@ class DBManager():
         result_chat_id = chat_id.scalar_one_or_none()
 
         await session.delete(result_chat_id)
+        await session.commit()
+
+
+    async def add_notification(
+        self, channels: list[str], content: str, user_id: int, session: AsyncSession
+    ) -> None:
+
+        new_notification = Notification(channels=channels, content=content, user_id=user_id)
+
+        session.add(new_notification)
+
+        await session.commit()
+        await session.refresh(new_notification)
+
+
+    async def get_notifications(self, user_id: int, session: AsyncSession) -> Sequence[Notification]:
+        notifications = await session.execute(
+            select(Notification).where(Notification.user_id == user_id)
+        )
+
+        result_notifications = notifications.scalars().all()
+
+        return result_notifications
+
+
+    async def delete_notification(self, notification_id: int, session: AsyncSession) -> None:
+        notification = await session.execute(
+            select(Notification).where(Notification.id == notification_id)
+        )
+
+        result_notification = notification.scalar_one_or_none()
+
+        await session.delete(result_notification)
         await session.commit()
 
 
