@@ -16,7 +16,10 @@ POSTGRES_DB: Final[str] = os.environ.get("POSTGRES_DB", "inksne")
 POSTGRES_HOST: Final[str] = os.environ.get("POSTGRES_HOST", "postgres")
 
 TELEGRAM_API_KEY: Final[str] = os.environ.get("TELEGRAM_API_KEY", "null")
-EMAIL_API_KEY: Final[str] = os.environ.get("EMAIL_API_KEY", "null")
+
+EMAIL_SENDER_ADDRESS: Final[str] = os.environ.get("EMAIL_SENDER_ADDRESS", "inksne@gmail.com")
+EMAIL_PASSWORD: Final[str] = os.environ.get("EMAIL_PASSWORD", "null")
+EMAIL_USERNAME: Final[str] = 'Notification Hub'
 
 
 class DBSettings(BaseSettings):
