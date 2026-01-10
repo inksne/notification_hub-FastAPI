@@ -17,9 +17,11 @@ POSTGRES_HOST: Final[str] = os.environ.get("POSTGRES_HOST", "postgres")
 
 TELEGRAM_API_KEY: Final[str] = os.environ.get("TELEGRAM_API_KEY", "null")
 
-EMAIL_SENDER_ADDRESS: Final[str] = os.environ.get("EMAIL_SENDER_ADDRESS", "inksne@gmail.com")
+EMAIL_SENDER_ADDRESS: Final[str] = os.environ.get("EMAIL_SENDER_ADDRESS", "inksne@yandex.ru")
 EMAIL_PASSWORD: Final[str] = os.environ.get("EMAIL_PASSWORD", "null")
-EMAIL_USERNAME: Final[str] = 'Notification Hub'
+EMAIL_SUBJECT: Final[str] = '🔔 Сообщение с Notification Hub'
+EMAIL_HOST: Final[str] = "smtp.yandex.ru"
+EMAIL_PORT: Final[int] = 465
 
 
 class DBSettings(BaseSettings):
