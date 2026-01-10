@@ -1,13 +1,13 @@
 from email.message import EmailMessage
+
 import aiosmtplib
 import ssl
 
-from ..config import EMAIL_SENDER_ADDRESS, EMAIL_PASSWORD, EMAIL_USERNAME
+from ..config import EMAIL_SENDER_ADDRESS, EMAIL_SUBJECT, EMAIL_PASSWORD, EMAIL_HOST, EMAIL_PORT
 from ..basemodels import EmailRequestModel
 
 
 def build_email_message(
-    subject: str,
     body: str,
     to_email: str,
 ) -> EmailMessage:
@@ -15,7 +15,7 @@ def build_email_message(
     message = EmailMessage()
     message["From"] = EMAIL_SENDER_ADDRESS
     message["To"] = to_email
-    message["Subject"] = subject
+    message["Subject"] = EMAIL_SUBJECT
     message.set_content(body)
 
     return message
@@ -39,29 +39,18 @@ def build_email_message(
 
 async def send_email_via_smtp(data: EmailRequestModel) -> None:
     message = build_email_message(
-        subject=data.subject,
         body=data.body,
         to_email=data.to_email,
     )
 
-    if data.use_starttls:
-        context = ssl.create_default_context()
-        await aiosmtplib.send(
-            message,
-            hostname=data.host,
-            port=data.port,
-            username=EMAIL_USERNAME,
-            password=EMAIL_PASSWORD,
-            start_tls=True,
-            tls_context=context,
-        )
+    ssl_context = ssl.create_default_context()
 
-    else:
-        await aiosmtplib.send(
-            message,
-            hostname=data.host,
-            port=data.port,
-            username=EMAIL_USERNAME,
-            password=EMAIL_PASSWORD,
-            use_tls=True,
-        )
+    await aiosmtplib.send(
+        message,
+        hostname=EMAIL_HOST,
+        port=EMAIL_PORT,
+        username=EMAIL_SENDER_ADDRESS,
+        password=EMAIL_PASSWORD,
+        use_tls=True,
+        tls_context=ssl_context,
+    )
