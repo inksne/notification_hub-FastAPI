@@ -14,9 +14,5 @@ class ChannelsHandlerModel(BaseModel):
 
 
 class EmailRequestModel(BaseModel):
-    subject: str
     body: str
     to_email: str
-    host: str
-    port: int
-    use_starttls: bool 
