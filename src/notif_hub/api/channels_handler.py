@@ -3,10 +3,11 @@ from starlette import status
 
 import logging
 
-from .exceptions import internal_server_error
 from .telegram_handler import handle_telegram_notify
+from .email_handler import handle_email_notify
+from .exceptions import internal_server_error
 from ..config import configure_logging
-from ..basemodels import ChannelsHandlerModel, TelegramHandlerModel
+from ..basemodels import ChannelsHandlerModel, TelegramHandlerModel, EmailRequestModel
 
 
 
@@ -68,6 +69,14 @@ async def handle_channels(data: ChannelsHandlerModel) -> None:
             )
 
             await handle_telegram_notify(request_data)
+
+        if 'email' in data.targets:
+            request_data = EmailRequestModel(
+                body=data.messages['email'],
+                to_email=data.targets['email']
+            )
+
+            await handle_email_notify(request_data)
 
     except Exception as e:
         logger.error(e)
