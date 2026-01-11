@@ -11,6 +11,9 @@ def run_mypy_checks():
     files = [
         ('channels_handler.py', 'src/notif_hub/api/channels_handler.py'),
         ('telegram_handler.py', 'src/notif_hub/api/telegram_handler.py'),
+        ('email_handler.py', 'src/notif_hub/api/email_handler.py'),
+        ('email_helpers.py', 'src/notif_hub/api/email_helpers.py'),
+        ('webhook_handler.py', 'src/notif_hub/api/webhook_handler.py'),
         ("managers.py", "src/notif_hub/database/managers.py"),
         ("bot_router.py", "src/notif_hub/bot/router.py"),
         ("templates_router.py", "src/notif_hub/templates/router.py"),
