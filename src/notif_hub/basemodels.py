@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Union
 
 
 
@@ -10,9 +11,16 @@ class TelegramHandlerModel(BaseModel):
 class ChannelsHandlerModel(BaseModel):
     messages: dict[str, str]
     channels: list[str]
-    targets: dict[str, str]
+    targets: dict[str, Union[str, dict]]
 
 
 class EmailRequestModel(BaseModel):
     body: str
     to_email: str
+
+
+class WebhookRequestModel(BaseModel):
+    message: str
+    url: str
+    format: str
+    param_name: str
