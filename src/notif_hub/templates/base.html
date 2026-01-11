@@ -126,6 +126,11 @@
       cursor: not-allowed;
       background: color-mix(in srgb, var(--bg) 50%, transparent);
     }
+    .channel-fields [data-field="webhook"] {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
     .muted { color: var(--muted); font-size: 13px; }
     .pill {
       display: inline-flex;
@@ -238,11 +243,29 @@
               <span class="muted">Почтовый ящик получателя.</span>
             </label>
 
-            <label data-field="webhook">
-              Webhook URL
-              <input type="url" name="webhook_url" id="webhook_url" placeholder="https://example.com/webhook" disabled>
-              <span class="muted">Доступная извне HTTPS-точка.</span>
-            </label>
+            <div data-field="webhook">
+              <label>
+                Webhook URL
+                <input type="url" name="webhook_url" id="webhook_url" placeholder="https://example.com/webhook" disabled>
+                <span class="muted">Доступная извне HTTPS-точка.</span>
+              </label>
+
+              <label>
+                Формат данных
+                <select name="webhook_format" id="webhook_format" disabled>
+                  <option value="json">JSON</option>
+                  <option value="text">Text</option>
+                  <option value="form">Form</option>
+                </select>
+                <span class="muted">Формат отправки данных в webhook.</span>
+              </label>
+
+              <label id="webhook_param_name_label" style="display: none;">
+                Название параметра
+                <input type="text" name="webhook_param_name" id="webhook_param_name" placeholder="msg" disabled>
+                <span class="muted">Название параметра для формата Form.</span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -273,17 +296,48 @@
         webhook: document.querySelector('[data-field="webhook"]')
       };
 
+      function updateWebhookParamField() {
+        const webhookChecked = channelCheckboxes.find(cb => cb.value === "webhook" && cb.checked);
+        const formatSelect = document.getElementById("webhook_format");
+        const paramNameLabel = document.getElementById("webhook_param_name_label");
+        const paramNameInput = document.getElementById("webhook_param_name");
+        
+        if (webhookChecked && formatSelect.value === "form") {
+          paramNameLabel.style.display = "flex";
+          paramNameInput.disabled = false;
+          paramNameInput.required = true;
+        } else {
+          paramNameLabel.style.display = "none";
+          paramNameInput.disabled = true;
+          paramNameInput.required = false;
+          if (!webhookChecked || formatSelect.value !== "form") {
+            paramNameInput.value = "";
+          }
+        }
+      }
+
       function updateFields() {
         const selected = channelCheckboxes.filter(cb => cb.checked).map(cb => cb.value);
         Object.entries(fieldMap).forEach(([key, el]) => {
-          const input = el.querySelector("input");
+          const inputs = el.querySelectorAll("input, select");
           const visible = selected.includes(key);
-          input.disabled = !visible;
-          input.required = visible;
-          if (!visible) {
-            input.value = "";
-          }
+          inputs.forEach(input => {
+            // Пропускаем поле param_name, оно управляется отдельно
+            if (input.id === "webhook_param_name") {
+              return;
+            }
+            input.disabled = !visible;
+            input.required = visible;
+            if (!visible) {
+              if (input.tagName === "SELECT") {
+                input.selectedIndex = 0;
+              } else {
+                input.value = "";
+              }
+            }
+          });
         });
+        updateWebhookParamField();
         status.textContent = selected.length
           ? `Выбрано каналов: ${selected.join(", ")}. Заполните обязательные поля.`
           : "Готово к отправке. Выберите канал, чтобы увидеть обязательные поля.";
@@ -335,9 +389,24 @@
           }
 
           if (channel === "webhook") {
-            const input = fieldMap.webhook.querySelector("input");
-            if (input.value) {
-              payload.targets.webhook = input.value;
+            const urlInput = fieldMap.webhook.querySelector("input[type='url']");
+            const formatSelect = fieldMap.webhook.querySelector("select");
+            const paramNameInput = document.getElementById("webhook_param_name");
+            
+            if (urlInput.value && formatSelect.value) {
+              const webhookTarget = {
+                url: urlInput.value,
+                format: formatSelect.value
+              };
+              
+              // Для формата form используем значение из поля, иначе значение по умолчанию
+              if (formatSelect.value === "form") {
+                webhookTarget.param_name = paramNameInput.value || "message";
+              } else {
+                webhookTarget.param_name = "message";
+              }
+              
+              payload.targets.webhook = webhookTarget;
             }
           }
         });
@@ -352,7 +421,22 @@
           });
 
           if (!response.ok) {
-            throw new Error(`Ошибка отправки: ${response.status}`);
+            // Пытаемся извлечь сообщение об ошибке из ответа
+            let errorMessage = "Не удалось отправить уведомление. Попробуйте ещё раз позже.";
+            
+            try {
+              const errorData = await response.json();
+              if (errorData && errorData.detail) {
+                errorMessage = errorData.detail;
+              }
+            } catch (jsonError) {
+              // Если не удалось распарсить JSON, используем сообщение по умолчанию
+              console.error("Не удалось распарсить ответ об ошибке:", jsonError);
+            }
+            
+            status.textContent = errorMessage;
+            status.style.color = "var(--danger)";
+            return;
           }
 
           status.textContent = "Уведомление успешно отправлено.";
@@ -365,6 +449,12 @@
       }
 
       channelCheckboxes.forEach(cb => cb.addEventListener("change", updateFields));
+      
+      const formatSelect = document.getElementById("webhook_format");
+      if (formatSelect) {
+        formatSelect.addEventListener("change", updateWebhookParamField);
+      }
+      
       form.addEventListener("submit", handleSubmit);
       form.addEventListener("reset", () => {
         setTimeout(() => {
