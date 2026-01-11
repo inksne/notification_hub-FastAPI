@@ -41,7 +41,7 @@ webhook_forbidden_error = HTTPException(
 
 webhook_not_found_error = HTTPException(
     status.HTTP_404_NOT_FOUND,
-    detail='Запрашиваемый ресрус не найден. Возможно, ошибка в написании url.'
+    detail='Запрашиваемый ресурс не найден. Возможно, ошибка в написании url.'
 )
 
 
