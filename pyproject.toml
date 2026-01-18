@@ -3,7 +3,7 @@ name = "notif-hub"
 version = "0.1.8"
 description = "A centralized service that accepts events, or requests to send notifications, and delivers them to users through one or more channels"
 authors = [
-    {name = "inksne",email = "vitalijjapr@gmail.com"}
+    {name = "inksne", email = "vitalijjapr@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.11"
