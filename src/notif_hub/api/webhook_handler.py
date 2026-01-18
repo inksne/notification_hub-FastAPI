@@ -42,7 +42,7 @@ async def handle_webhook_notify(data: WebhookRequestModel) -> None:
             elif data.format == 'form':
                 headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-                response = await client.post(url=f'{data.url}&{data.param_name}={data.message}', headers=headers)
+                response = await client.post(url=f'{data.url}?{data.param_name}={data.message}', headers=headers)
 
             else:
                 headers = {"Content-Type": "text/plain; charset=utf-8"}
