@@ -1,5 +1,4 @@
-from dotenv import load_dotenv
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 import os
 import logging
@@ -7,25 +6,35 @@ from typing import Final
 
 
 
-load_dotenv()
+class ConstantSettings(BaseSettings):
+    POSTGRES_USER: Final[str]
+    POSTGRES_PASSWORD: Final[str]
+    POSTGRES_DB: Final[str]
+    POSTGRES_HOST: Final[str]
 
+    TELEGRAM_API_KEY: Final[str]
 
-POSTGRES_USER: Final[str] = os.environ.get("POSTGRES_USER", "inksne")
-POSTGRES_PASSWORD: Final[str] = os.environ.get("POSTGRES_PASSWORD", "inksne")
-POSTGRES_DB: Final[str] = os.environ.get("POSTGRES_DB", "inksne")
-POSTGRES_HOST: Final[str] = os.environ.get("POSTGRES_HOST", "postgres")
+    OAUTH_GOOGLE_CLIENT_SECRET: Final[str]
+    OAUTH_GOOGLE_CLIENT_ID: Final[str]
 
-TELEGRAM_API_KEY: Final[str] = os.environ.get("TELEGRAM_API_KEY", "null")
+    REDIRECT_URI: Final[str] = "http://localhost:8000/authenticated"
 
-EMAIL_SENDER_ADDRESS: Final[str] = os.environ.get("EMAIL_SENDER_ADDRESS", "inksne@yandex.ru")
-EMAIL_PASSWORD: Final[str] = os.environ.get("EMAIL_PASSWORD", "null")
-EMAIL_SUBJECT: Final[str] = '🔔 Сообщение с Notification Hub'
-EMAIL_HOST: Final[str] = "smtp.yandex.ru"
-EMAIL_PORT: Final[int] = 465
+    EMAIL_SENDER_ADDRESS: Final[str]
+    EMAIL_PASSWORD: Final[str]
+    EMAIL_SUBJECT: Final[str] = '🔔 Сообщение с Notification Hub'
+    EMAIL_HOST: Final[str] = "smtp.yandex.ru"
+    EMAIL_PORT: Final[int] = 465
+
+    model_config = SettingsConfigDict(
+        env_file=os.path.join(os.path.dirname(__file__), '..', '..', '.env'),
+        env_file_encoding='utf-8'
+    )
+
+constant_settings = ConstantSettings()
 
 
 class DBSettings(BaseSettings):
-    db_url: str = f'postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}'
+    db_url: str = f'postgresql+asyncpg://{constant_settings.POSTGRES_USER}:{constant_settings.POSTGRES_PASSWORD}@{constant_settings.POSTGRES_HOST}:5432/{constant_settings.POSTGRES_DB}'
 
 db_settings = DBSettings()
 
