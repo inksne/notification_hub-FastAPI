@@ -3,7 +3,7 @@ from email.message import EmailMessage
 import aiosmtplib
 import ssl
 
-from ..config import EMAIL_SENDER_ADDRESS, EMAIL_SUBJECT, EMAIL_PASSWORD, EMAIL_HOST, EMAIL_PORT
+from ..config import constant_settings
 from ..basemodels import EmailRequestModel
 
 
@@ -13,9 +13,9 @@ def build_email_message(
 ) -> EmailMessage:
 
     message = EmailMessage()
-    message["From"] = EMAIL_SENDER_ADDRESS
+    message["From"] = constant_settings.EMAIL_SENDER_ADDRESS
     message["To"] = to_email
-    message["Subject"] = EMAIL_SUBJECT
+    message["Subject"] = constant_settings.EMAIL_SUBJECT
     message.set_content(body)
 
     return message
@@ -47,10 +47,10 @@ async def send_email_via_smtp(data: EmailRequestModel) -> None:
 
     await aiosmtplib.send(
         message,
-        hostname=EMAIL_HOST,
-        port=EMAIL_PORT,
-        username=EMAIL_SENDER_ADDRESS,
-        password=EMAIL_PASSWORD,
+        hostname=constant_settings.EMAIL_HOST,
+        port=constant_settings.EMAIL_PORT,
+        username=constant_settings.EMAIL_SENDER_ADDRESS,
+        password=constant_settings.EMAIL_PASSWORD,
         use_tls=True,
         tls_context=ssl_context,
     )

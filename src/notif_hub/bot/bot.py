@@ -1,8 +1,8 @@
 from aiogram import Bot, Dispatcher
 
-from ..config import TELEGRAM_API_KEY
+from ..config import constant_settings
 
 
 
-bot = Bot(token=TELEGRAM_API_KEY)
+bot = Bot(token=constant_settings.TELEGRAM_API_KEY)
 dp = Dispatcher()
