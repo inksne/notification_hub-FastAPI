@@ -10,7 +10,9 @@ from .database.database import create_db_and_tables
 from .templates import templates_router
 from .bot import bot, dp, commands_router
 from .api import channels_router, telegram_router, email_router, webhook_router
-from .auth.router import router as auth_router
+from .auth import auth_router
+
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
