@@ -5,6 +5,7 @@ from aiogram.exceptions import TelegramForbiddenError, TelegramRetryAfter
 import logging
 
 from .exceptions import internal_server_error, telegram_forbidden_error, telegram_retry_after_error
+from .texts import generate_telegram_response
 from ..config import configure_logging
 from ..basemodels import TelegramHandlerModel
 from ..database.database import get_async_session
@@ -22,13 +23,15 @@ logger = logging.getLogger(__name__)
 
 
 
-@router.post('/telegram', status_code=status.HTTP_204_NO_CONTENT)
+@router.post('/telegram')
 async def handle_telegram_notify(data: TelegramHandlerModel) -> None:
     try:
         async for session in get_async_session():
             chat_id = await db_manager.get_chat_id(username=data.username, session=session)
 
         await bot.send_message(chat_id=chat_id, text=generate_notify_text(data.message))
+
+        return generate_telegram_response(data=data)
 
     except TelegramForbiddenError as e:
         logger.error('TelegramForbiddenError', e)

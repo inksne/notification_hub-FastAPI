@@ -3,6 +3,7 @@ __all__ = [
     'handle_channels', 'handle_telegram_notify', 'handle_email_notify', 'handle_webhook_notify',
     'send_email_via_smtp', 'build_email_message',
     'telegram_forbidden_error', 'telegram_retry_after_error',
+    'generate_channels_response', 'generate_telegram_response', 'generate_email_response', 'generate_webhook_response',
     'webhook_bad_request_error', 'webhook_unauthorized_error', 'webhook_forbidden_error', 'webhook_method_not_allowed_error',
     'webhook_not_found_error', 'webhook_too_many_requests_error', 'webhook_unavailable_for_legal_reasons_error',
     'internal_server_error'
@@ -17,6 +18,7 @@ from .email_handler import handle_email_notify
 from .webhook_handler import router as webhook_router
 from .webhook_handler import handle_webhook_notify
 from .email_helpers import send_email_via_smtp, build_email_message
+from .texts import generate_channels_response, generate_telegram_response, generate_email_response, generate_webhook_response
 from .exceptions import (
     telegram_forbidden_error,
     telegram_retry_after_error,

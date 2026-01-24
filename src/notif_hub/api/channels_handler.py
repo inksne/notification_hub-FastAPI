@@ -24,6 +24,7 @@ from .exceptions import (
     webhook_unauthorized_error,
     webhook_unavailable_for_legal_reasons_error,
 )
+from .texts import generate_channels_response
 
 
 
@@ -34,7 +35,7 @@ configure_logging()
 logger = logging.getLogger(__name__)
 
 
-@router.post('/channels', status_code=status.HTTP_204_NO_CONTENT)
+@router.post('/channels')
 async def handle_channels(data: ChannelsHandlerModel) -> None:
     try:
         if 'telegram' in data.targets:
@@ -82,6 +83,8 @@ async def handle_channels(data: ChannelsHandlerModel) -> None:
             )
 
             await handle_webhook_notify(webhook_request)
+
+        return generate_channels_response(data=data)
 
     except httpx.HTTPStatusError as e:
         status_code = e.response.status_code

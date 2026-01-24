@@ -14,6 +14,7 @@ from .exceptions import (
     webhook_too_many_requests_error,
     webhook_unavailable_for_legal_reasons_error
 )
+from .texts import generate_webhook_response
 from ..basemodels import WebhookRequestModel
 from ..config import configure_logging
 
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=['Webhook Handler'], prefix='/api/v1')
 
 
-@router.post('/webhook', status_code=status.HTTP_204_NO_CONTENT)
+@router.post('/webhook')
 async def handle_webhook_notify(data: WebhookRequestModel) -> None:
     async with httpx.AsyncClient() as client:
         try:
@@ -50,6 +51,8 @@ async def handle_webhook_notify(data: WebhookRequestModel) -> None:
                 response = await client.post(url=data.url, content=data.message, headers=headers)
 
             response.raise_for_status()
+
+            return generate_webhook_response(data=data)
 
         except httpx.HTTPStatusError as e:
             status_code = e.response.status_code
