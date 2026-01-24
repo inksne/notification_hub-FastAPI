@@ -18,6 +18,10 @@ class ConstantSettings(BaseSettings):
     OAUTH_GOOGLE_CLIENT_ID: Final[str]
 
     REDIRECT_URI: Final[str] = "http://localhost:8000/authenticated"
+    GOOGLE_TOKEN_URL: Final[str] = "https://oauth2.googleapis.com/token"
+
+    GOOGLE_JWKS_URI = "https://www.googleapis.com/oauth2/v3/certs"
+    GOOGLE_ISSUERS = ("https://accounts.google.com", "accounts.google.com")
 
     EMAIL_SENDER_ADDRESS: Final[str]
     EMAIL_PASSWORD: Final[str]
