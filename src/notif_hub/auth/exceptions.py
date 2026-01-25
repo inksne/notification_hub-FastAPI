@@ -19,3 +19,9 @@ invalid_token_error = HTTPException(
     status.HTTP_401_UNAUTHORIZED,
     detail='Проблема декодирования jwt токена.'
 )
+
+
+state_not_found_error = HTTPException(
+    status.HTTP_401_UNAUTHORIZED,
+    detail='Время, отведённое на авторизацию, истекло. Попробуйте снова.'
+)
