@@ -26,7 +26,7 @@ router = APIRouter(tags=["Auth"], prefix='/github')
 
 
 
-@router.get("/github/url")
+@router.get("/url")
 def get_github_oauth_redirect_uri():
     uri = generate_github_oauth_redirect_uri()
 
@@ -35,7 +35,7 @@ def get_github_oauth_redirect_uri():
 
 
 
-@router.post("/github/callback")
+@router.post("/callback")
 async def handle_github_code(code: Annotated[str, Body()], state: Annotated[str, Body()]):
     if not await redis_manager.get_state(state):
         raise state_not_found_error
