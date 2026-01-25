@@ -10,7 +10,7 @@ from .database.database import create_db_and_tables
 from .templates import templates_router
 from .bot import bot, dp, commands_router
 from .api import channels_router, telegram_router, email_router, webhook_router
-from .auth import auth_router
+from .auth import google_auth_router, github_auth_router
 
 
 
@@ -36,7 +36,8 @@ app.include_router(channels_router)
 app.include_router(telegram_router)
 app.include_router(email_router)
 app.include_router(webhook_router)
-app.include_router(auth_router)
+app.include_router(google_auth_router)
+app.include_router(github_auth_router)
 
 
 
