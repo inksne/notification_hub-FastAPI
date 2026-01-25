@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.post('/telegram')
-async def handle_telegram_notify(data: TelegramHandlerModel) -> None:
+async def handle_telegram_notify(data: TelegramHandlerModel) -> dict[str, str]:
     try:
         async for session in get_async_session():
             chat_id = await psql_manager.get_chat_id(username=data.username, session=session)

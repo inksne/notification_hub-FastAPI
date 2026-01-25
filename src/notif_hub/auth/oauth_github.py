@@ -6,13 +6,13 @@ from ..database.managers import redis_manager
 
 
 
-async def generate_github_oauth_redirect_uri():
+async def generate_github_oauth_redirect_uri() -> str:
     state = secrets.token_urlsafe(16)
 
     await redis_manager.add_state(state=state)
 
     query_params = {
-        "redirect_uri": constant_settings.GITHUB_REDIRECT_URI,
+        "redirect_uri": constant_settings.REDIRECT_URI,
         "client_id": constant_settings.OAUTH_GITHUB_CLIENT_ID,
         "scope": "user",
         "state": state

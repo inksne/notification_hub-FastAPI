@@ -18,7 +18,7 @@ router = APIRouter(tags=['Email Handler'], prefix='/api/v1')
 
 
 @router.post('/email')
-async def handle_email_notify(data: EmailRequestModel) -> None:
+async def handle_email_notify(data: EmailRequestModel) -> dict[str, str]:
     try:
         await send_email_via_smtp(data=data)
 

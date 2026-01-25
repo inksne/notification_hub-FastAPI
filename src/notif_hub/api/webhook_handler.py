@@ -28,7 +28,7 @@ router = APIRouter(tags=['Webhook Handler'], prefix='/api/v1')
 
 
 @router.post('/webhook')
-async def handle_webhook_notify(data: WebhookRequestModel) -> None:
+async def handle_webhook_notify(data: WebhookRequestModel) -> dict[str, str]:
     async with httpx.AsyncClient() as client:
         try:
             if data.format == 'json':

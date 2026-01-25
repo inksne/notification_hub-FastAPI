@@ -83,7 +83,7 @@ psql_manager = PSQLManager()
 
 
 class RedisManager():
-    def __init__(self):
+    def __init__(self) -> None:
         self.r = redis.Redis(host=constant_settings.REDIS_HOST)
 
     async def add_state(self, state: str) -> None:

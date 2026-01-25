@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.post('/channels')
-async def handle_channels(data: ChannelsHandlerModel) -> None:
+async def handle_channels(data: ChannelsHandlerModel) -> dict[str, str]:
     try:
         if 'telegram' in data.targets:
             telegram_target = data.targets['telegram']

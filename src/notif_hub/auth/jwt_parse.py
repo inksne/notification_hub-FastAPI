@@ -18,7 +18,7 @@ def _get_jwk_client() -> PyJWKClient:
     return _jwk_client
 
 
-def parse_user_data(data: dict[str, Any]) -> dict[str, Any]:
+def parse_user_data(data: dict[str, Any]) -> Any:
     id_token = data["id_token"]
     jwk_client = _get_jwk_client()
     signing_key = jwk_client.get_signing_key_from_jwt(id_token)

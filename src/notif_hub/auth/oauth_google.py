@@ -6,13 +6,13 @@ from ..database.managers import redis_manager
 
 
 
-async def generate_google_oauth_redirect_uri():
+async def generate_google_oauth_redirect_uri() -> str:
     state = secrets.token_urlsafe(16)
 
     await redis_manager.add_state(state=state)
 
     query_params = {
-        "redirect_uri": constant_settings.GOOGLE_REDIRECT_URI,
+        "redirect_uri": constant_settings.REDIRECT_URI,
         "client_id": constant_settings.OAUTH_GOOGLE_CLIENT_ID,
         "response_type": "code",
         "scope": " ".join(["openid", "profile", "email"]),

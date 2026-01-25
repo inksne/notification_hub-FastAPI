@@ -1,18 +1,19 @@
 from typing import Annotated
 from fastapi import APIRouter, Body
 from fastapi.responses import RedirectResponse
+from sqlalchemy.orm import strategies
 from starlette import status
 
 import logging
 import httpx
+from typing import Any
 
 from ..config import configure_logging, constant_settings
 from ..database.managers import redis_manager
-from .oauth_google import generate_github_oauth_redirect_uri
+from .oauth_github import generate_github_oauth_redirect_uri
 from .exceptions import (
     internal_server_error,
     invalid_response_error,
-    invalid_token_error,
     state_not_found_error
 )
 
@@ -27,16 +28,15 @@ router = APIRouter(tags=["Auth"], prefix='/github')
 
 
 @router.get("/url")
-def get_github_oauth_redirect_uri():
-    uri = generate_github_oauth_redirect_uri()
-
+async def get_github_oauth_redirect_uri() -> RedirectResponse:
+    uri = await generate_github_oauth_redirect_uri()
     return RedirectResponse(url=uri, status_code=status.HTTP_302_FOUND)
 
 
 
 
 @router.post("/callback")
-async def handle_github_code(code: Annotated[str, Body()], state: Annotated[str, Body()]):
+async def handle_github_code(code: Annotated[str, Body()], state: Annotated[str, Body()]) -> dict[str, dict[str, Any]]:
     if not await redis_manager.get_state(state):
         raise state_not_found_error
 
@@ -49,7 +49,7 @@ async def handle_github_code(code: Annotated[str, Body()], state: Annotated[str,
                 data={
                     "client_id": constant_settings.OAUTH_GITHUB_CLIENT_ID,
                     "client_secret": constant_settings.OAUTH_GITHUB_CLIENT_SECRET,
-                    "redirect_uri": constant_settings.GITHUB_REDIRECT_URI,
+                    "redirect_uri": constant_settings.REDIRECT_URI,
                     "code": code
                 },
                 headers=headers
