@@ -8,7 +8,7 @@ import logging
 from .texts import generate_start_text, generate_help_text, internal_error_text
 from ..config import configure_logging
 from ..database.database import get_async_session
-from ..database.managers import db_manager
+from ..database.managers import psql_manager
 
 
 
@@ -28,8 +28,8 @@ async def handle_start(msg: types.Message) -> None:
         await msg.bot.send_chat_action(chat_id=msg.chat.id, action=ChatAction.TYPING)
 
         async for session in get_async_session():
-            if not await db_manager.get_chat_id(username=msg.from_user.username, session=session):
-                await db_manager.add_chat_id(chat_id=msg.chat.id, username=msg.from_user.username, session=session)
+            if not await psql_manager.get_chat_id(username=msg.from_user.username, session=session):
+                await psql_manager.add_chat_id(chat_id=msg.chat.id, username=msg.from_user.username, session=session)
 
         await msg.answer(text=generate_start_text(msg), parse_mode=ParseMode.HTML)
 
@@ -47,8 +47,8 @@ async def handle_help(msg: types.Message) -> None:
         await msg.bot.send_chat_action(chat_id=msg.chat.id, action=ChatAction.TYPING)
 
         async for session in get_async_session():
-            if not await db_manager.get_chat_id(username=msg.from_user.username, session=session):
-                await db_manager.add_chat_id(chat_id=msg.chat.id, username=msg.from_user.username, session=session)
+            if not await psql_manager.get_chat_id(username=msg.from_user.username, session=session):
+                await psql_manager.add_chat_id(chat_id=msg.chat.id, username=msg.from_user.username, session=session)
 
         await msg.answer(text=generate_help_text(), parse_mode=ParseMode.HTML)
 

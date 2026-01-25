@@ -9,7 +9,7 @@ from .texts import generate_telegram_response
 from ..config import configure_logging
 from ..basemodels import TelegramHandlerModel
 from ..database.database import get_async_session
-from ..database.managers import db_manager
+from ..database.managers import psql_manager
 from ..bot.bot import bot
 from ..bot.texts import generate_notify_text
 
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 async def handle_telegram_notify(data: TelegramHandlerModel) -> None:
     try:
         async for session in get_async_session():
-            chat_id = await db_manager.get_chat_id(username=data.username, session=session)
+            chat_id = await psql_manager.get_chat_id(username=data.username, session=session)
 
         await bot.send_message(chat_id=chat_id, text=generate_notify_text(data.message))
 
@@ -37,7 +37,7 @@ async def handle_telegram_notify(data: TelegramHandlerModel) -> None:
         logger.error('TelegramForbiddenError', e)
 
         async for session in get_async_session():
-            await db_manager.delete_chat_id(username=data.username, session=session)
+            await psql_manager.delete_chat_id(username=data.username, session=session)
 
         raise telegram_forbidden_error
 
