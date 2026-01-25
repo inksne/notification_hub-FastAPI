@@ -12,16 +12,28 @@ class ConstantSettings(BaseSettings):
     POSTGRES_DB: Final[str]
     POSTGRES_HOST: Final[str]
 
+    REDIS_HOST: Final[str]
+    REDIS_STATE_PREFIX: Final[str] = "oauth:state:"
+    REDIS_STATE_TTL: Final[int] = 900
+
     TELEGRAM_API_KEY: Final[str]
 
     OAUTH_GOOGLE_CLIENT_SECRET: Final[str]
     OAUTH_GOOGLE_CLIENT_ID: Final[str]
 
-    REDIRECT_URI: Final[str] = "http://localhost:8000/authenticated"
+    GOOGLE_REDIRECT_URI: Final[str] = "http://localhost:8000/authenticated"
     GOOGLE_TOKEN_URL: Final[str] = "https://oauth2.googleapis.com/token"
+    GOOGLE_AUTH_URL: Final[str] = "https://accounts.google.com/o/oauth2/v2/auth"
 
     GOOGLE_JWKS_URI = "https://www.googleapis.com/oauth2/v3/certs"
     GOOGLE_ISSUERS = ("https://accounts.google.com", "accounts.google.com")
+
+    OAUTH_GITHUB_CLIENT_ID: Final[str]
+    OAUTH_GITHUB_CLIENT_SECRET: Final[str]
+
+    GITHUB_AUTH_URL: Final[str] = "https://github.com/login/oauth/authorize"
+    GITHUB_TOKEN_URL: Final[str] = "https://github.com/login/oauth/access_token"
+    GITHUB_ACCESS_URL: Final[str] = "https://api.github.com/user"
 
     EMAIL_SENDER_ADDRESS: Final[str]
     EMAIL_PASSWORD: Final[str]
