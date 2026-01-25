@@ -21,7 +21,7 @@ class ConstantSettings(BaseSettings):
     OAUTH_GOOGLE_CLIENT_SECRET: Final[str]
     OAUTH_GOOGLE_CLIENT_ID: Final[str]
 
-    GOOGLE_REDIRECT_URI: Final[str] = "http://localhost:8000/authenticated"
+    REDIRECT_URI: Final[str] = "http://localhost:8000/authenticated"
     GOOGLE_TOKEN_URL: Final[str] = "https://oauth2.googleapis.com/token"
     GOOGLE_AUTH_URL: Final[str] = "https://accounts.google.com/o/oauth2/v2/auth"
 
