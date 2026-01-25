@@ -5,7 +5,7 @@ __all__ = [
     'get_github_oauth_redirect_uri', 'handle_github_code',
     '_jwk_client', '_get_jwk_client', 'parse_user_data',
     'generate_google_oauth_redirect_uri',
-    'invalid_response_error', 'invalid_token_error', 'internal_server_error'
+    'invalid_response_error', 'invalid_token_error', 'internal_server_error', 'state_not_found_error'
 ]
 
 from .google_router import router as google_auth_router
@@ -14,4 +14,4 @@ from .github_router import router as github_auth_router
 from .github_router import get_github_oauth_redirect_uri, handle_github_code
 from .jwt_parse import _jwk_client, _get_jwk_client, parse_user_data
 from .oauth_google import generate_google_oauth_redirect_uri
-from .exceptions import invalid_response_error, invalid_token_error, internal_server_error
+from .exceptions import invalid_response_error, invalid_token_error, internal_server_error, state_not_found_error
