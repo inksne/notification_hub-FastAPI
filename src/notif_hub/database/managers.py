@@ -2,12 +2,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from typing import Sequence
+import redis.asyncio as redis
 
 from .models import Chat_id, Notification
+from ..config import constant_settings
 
 
 
-class DBManager():
+class PSQLManager():
     async def add_chat_id(self, chat_id: int, username: str | None, session: AsyncSession) -> None:
         if not username:    # mypy
             return
@@ -77,4 +79,22 @@ class DBManager():
         await session.commit()
 
 
-db_manager = DBManager()
+psql_manager = PSQLManager()
+
+
+class RedisManager():
+    def __init__(self):
+        self.r = redis.Redis(host=constant_settings.REDIS_HOST)
+
+    async def add_state(self, state: str) -> None:
+        await self.r.set(
+            f"{constant_settings.REDIS_STATE_PREFIX}{state}",
+            "1", ex=constant_settings.REDIS_STATE_TTL
+        )
+
+    async def get_state(self, state: str) -> bool:
+        value = await self.r.getdel(f"{constant_settings.REDIS_STATE_PREFIX}{state}")
+        return value is not None
+
+
+redis_manager = RedisManager()
