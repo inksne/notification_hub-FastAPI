@@ -25,7 +25,7 @@ configure_logging()
 logger = logging.getLogger(__name__)
 
 
-router = APIRouter(tags=["Auth"], prefix='/google')
+router = APIRouter(tags=["Google OAuth"], prefix='/google')
 
 
 

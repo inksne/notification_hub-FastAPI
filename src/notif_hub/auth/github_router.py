@@ -23,7 +23,7 @@ configure_logging()
 logger = logging.getLogger(__name__)
 
 
-router = APIRouter(tags=["Auth"], prefix='/github')
+router = APIRouter(tags=["GitHub OAuth"], prefix='/github')
 
 
 
