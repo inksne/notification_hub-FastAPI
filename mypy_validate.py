@@ -9,6 +9,11 @@ complete_count = time_count = 0
 
 def run_mypy_checks():
     files = [
+        ("auth.py", "src/notif_hub/auth/cookie_auth/auth.py"),
+        ("helpers.py", "src/notif_hub/auth/cookie_auth/helpers.py"),
+        ("schemas.py", "src/notif_hub/auth/cookie_auth/schemas.py"),
+        ("utils.py", "src/notif_hub/auth/cookie_auth/utils.py"),
+        ("validation.py", "src/notif_hub/auth/cookie_auth/validation.py"),
         ('channels_handler.py', 'src/notif_hub/api/channels_handler.py'),
         ('telegram_handler.py', 'src/notif_hub/api/telegram_handler.py'),
         ('email_handler.py', 'src/notif_hub/api/email_handler.py'),
