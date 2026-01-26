@@ -10,7 +10,7 @@ from .database.database import create_db_and_tables
 from .templates import templates_router
 from .bot import bot, dp, commands_router
 from .api import channels_router, telegram_router, email_router, webhook_router
-from .auth import google_auth_router, github_auth_router
+from .auth import google_auth_router, github_auth_router, cookie_auth_router
 
 
 
@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title='Notification Hub', lifespan=lifespan)
+app = FastAPI(title='Notification Hub', version='0.1.11', lifespan=lifespan)
 
 
 app.add_middleware(
@@ -38,6 +38,7 @@ app.include_router(email_router)
 app.include_router(webhook_router)
 app.include_router(google_auth_router)
 app.include_router(github_auth_router)
+app.include_router(cookie_auth_router)
 
 
 
