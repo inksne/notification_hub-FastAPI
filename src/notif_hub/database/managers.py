@@ -37,7 +37,10 @@ class PSQLManager():
             return None
 
 
-    async def get_user_by_username(self, username: str, session: AsyncSession) -> Optional[User]:
+    async def get_user_by_username(self, username: str | None, session: AsyncSession) -> Optional[User]:
+        if not username:    # mypy
+            return None
+
         result = await session.execute(select(User).where(User.username == username))
         user = result.scalars().first()
 
