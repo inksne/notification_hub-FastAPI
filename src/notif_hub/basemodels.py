@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import Union
+from typing import Union, Final
+from pathlib import Path
 
 
 
@@ -24,3 +25,17 @@ class WebhookRequestModel(BaseModel):
     url: str
     format: str
     param_name: str
+
+
+class TokenInfo(BaseModel):
+    access_token: str
+    refresh_token: str | None = None
+    token_type: str = "Bearer"
+
+
+class AuthJWT(BaseModel):
+    private_key_path: Path = Path("src/notif_hub/certs") / "jwt-private.pem"
+    public_key_path: Path = Path("src/notif_hub/certs") / "jwt-public.pem"
+    algorithm: Final[str] = "RS256"
+    access_token_expire_minutes: int = 5
+    refresh_token_expire_days: int = 30
