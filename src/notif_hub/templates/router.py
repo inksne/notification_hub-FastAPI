@@ -6,8 +6,6 @@ from starlette.templating import _TemplateResponse
 import logging
 from pathlib import Path
 
-from ..database.models import User
-
 from ..config import configure_logging
 
 
