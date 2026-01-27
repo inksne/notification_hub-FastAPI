@@ -8,6 +8,7 @@ import uvicorn
 
 from .database.database import create_db_and_tables
 from .templates import templates_router
+from .config import constant_settings
 from .bot import bot, dp, commands_router
 from .api import channels_router, telegram_router, email_router, webhook_router
 from .auth import google_auth_router, github_auth_router, cookie_auth_router
@@ -20,7 +21,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title='Notification Hub', version='0.1.11', lifespan=lifespan)
+app = FastAPI(title='Notification Hub', version=constant_settings.APP_VERSION, lifespan=lifespan)
 
 
 app.add_middleware(
