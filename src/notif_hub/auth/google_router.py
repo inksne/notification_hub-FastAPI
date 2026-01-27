@@ -62,6 +62,7 @@ async def handle_google_code(code: Annotated[str, Body()], state: Annotated[str,
                 raise invalid_response_error
 
             try:
+                logger.info(parse_user_data(data=data))
                 return {"user": parse_user_data(data=data)}
 
             except (jwt.DecodeError, jwt.InvalidTokenError) as e:

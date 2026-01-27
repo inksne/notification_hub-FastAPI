@@ -1,7 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Body
 from fastapi.responses import RedirectResponse
-from sqlalchemy.orm import strategies
 from starlette import status
 
 import logging
@@ -31,8 +30,6 @@ router = APIRouter(tags=["GitHub OAuth"], prefix='/github')
 async def get_github_oauth_redirect_uri() -> RedirectResponse:
     uri = await generate_github_oauth_redirect_uri()
     return RedirectResponse(url=uri, status_code=status.HTTP_302_FOUND)
-
-
 
 
 @router.post("/callback")
@@ -79,6 +76,7 @@ async def handle_github_code(code: Annotated[str, Body()], state: Annotated[str,
             user_response.raise_for_status()
 
             try:
+                logger.info(user_response.json())
                 return {"user": user_response.json()}
 
             except ValueError as e:
