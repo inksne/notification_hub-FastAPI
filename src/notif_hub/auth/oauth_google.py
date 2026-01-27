@@ -7,7 +7,7 @@ from ..database.managers import redis_manager
 
 
 async def generate_google_oauth_redirect_uri() -> str:
-    state = secrets.token_urlsafe(16)
+    state = f"google:{secrets.token_urlsafe(16)}"
 
     await redis_manager.add_state(state=state)
 
