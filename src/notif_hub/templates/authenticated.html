@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Успешная аутентификация · Notification Hub{% endblock %}
+
+{% block content %}
+<h1>Вы авторизованы</h1>
+<p id="auth-status" class="muted">Проверяем данные авторизации…</p>
+<pre id="auth-user" class="status hidden" style="margin-top: 16px; white-space: pre-wrap;"></pre>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  (() => {
+    const params = new URLSearchParams(window.location.search || "");
+    const code = params.get("code");
+    const state = params.get("state");
+    const error = params.get("error");
+
+    // Пытаемся восстановить провайдера из state,
+    // в котором мы закодировали его название при редиректе.
+    let provider = null;
+    if (typeof state === "string") {
+      if (state.startsWith("google:")) {
+        provider = "google";
+      } else if (state.startsWith("github:")) {
+        provider = "github";
+      }
+    }
+
+    const statusEl = document.getElementById("auth-status");
+    const userEl = document.getElementById("auth-user");
+
+    if (!statusEl || !userEl) {
+      return;
+    }
+
+    function setStatus(message, colorVar = "--muted") {
+      statusEl.textContent = message;
+      statusEl.style.color = `var(${colorVar})`;
+    }
+
+    if (error) {
+      setStatus(`Произошла ошибка при аутентификации: ${error}`, "--danger");
+      return;
+    }
+
+    if (!code || !state) {
+      setStatus("Код авторизации не обнаружен в адресной строке. Возможно, вы уже авторизованы или перешли по прямой ссылке.");
+      return;
+    }
+
+    function getCallbackUrl(providerName) {
+      if (providerName === "google") return "/google/callback";
+      if (providerName === "github") return "/github/callback";
+      // Если провайдер не распознан, попробуем старую стратегию с последовательными запросами.
+      return null;
+    }
+
+    async function callCallback(url) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ code, state })
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Запрос к ${url} завершился с ошибкой ${response.status}: ${text}`);
+      }
+
+      return response.json();
+    }
+
+    (async () => {
+      try {
+        let data;
+        const callbackUrl = getCallbackUrl(provider);
+
+        if (callbackUrl) {
+          // Новый путь — вызываем конкретный callback по провайдеру из state.
+          data = await callCallback(callbackUrl);
+        } else {
+          // Fallback для совместимости: сначала пытаемся Google, затем GitHub,
+          // как было раньше.
+          try {
+            data = await callCallback("/google/callback");
+          } catch (_) {
+            data = await callCallback("/github/callback");
+          }
+        }
+
+        setStatus("Аутентификация по OAuth выполнена успешно.", "--accent");
+
+        if (data && data.user) {
+          userEl.textContent = JSON.stringify(data.user, null, 2);
+          userEl.classList.remove("hidden");
+        }
+      } catch (e) {
+        console.error(e);
+        setStatus("Не удалось получить данные пользователя по коду авторизации. Попробуйте снова.", "--danger");
+      }
+    })();
+  })();
+</script>
+{% endblock %}

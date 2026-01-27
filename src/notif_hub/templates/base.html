@@ -64,7 +64,7 @@
       font-weight: 600;
       color: var(--text);
     }
-    select, textarea, input[type="text"], input[type="email"], input[type="url"] {
+    select, textarea, input[type="text"], input[type="email"], input[type="url"], input[type="password"] {
       width: 100%;
       padding: 10px 12px;
       border-radius: 8px;
@@ -144,6 +144,32 @@
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
+      text-decoration: none;
+    }
+    .top-nav {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-link-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+    }
+    .nav-link-button:hover {
+      background: color-mix(in srgb, var(--accent) 18%, transparent);
+      color: var(--accent);
+      border-color: var(--accent);
     }
     .actions {
       display: flex;
@@ -191,8 +217,13 @@
 <body>
   <header>
     <div class="row" style="grid-template-columns: auto 1fr;">
-      <div class="pill">Notification Hub</div>
-      <div class="muted" style="text-align: right;">Единая отправка сообщений</div>
+      <a href="/" class="pill">Notification Hub</a>
+      <div class="top-nav">
+        <div class="muted">Единая отправка сообщений</div>
+        <a href="/about" class="nav-link-button">О проекте</a>
+        <a href="/register" class="nav-link-button">Регистрация</a>
+        <a href="/login" class="nav-link-button">Войти</a>
+      </div>
     </div>
   </header>
 
@@ -287,14 +318,18 @@
     (() => {
       const form = document.getElementById("send-form");
       const channelList = document.getElementById("channel-list");
-      const channelCheckboxes = [...channelList.querySelectorAll('input[type="checkbox"]')];
       const status = document.getElementById("status");
       const messageInput = document.getElementById("message");
+      if (!form || !channelList || !status || !messageInput) {
+        return;
+      }
+
       const fieldMap = {
         email: document.querySelector('[data-field="email"]'),
         telegram: document.querySelector('[data-field="telegram"]'),
         webhook: document.querySelector('[data-field="webhook"]')
       };
+      const channelCheckboxes = [...channelList.querySelectorAll('input[type="checkbox"]')];
 
       function updateWebhookParamField() {
         const webhookChecked = channelCheckboxes.find(cb => cb.value === "webhook" && cb.checked);
