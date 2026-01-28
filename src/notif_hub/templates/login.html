@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Вход · Notification Hub{% endblock %}
+
+{% block content %}
+<h1>Войти</h1>
+<p>Войдите в аккаунт или используйте внешний провайдер.</p>
+
+<form id="login-form" method="post" action="/jwt/login">
+  <div class="row">
+    <label>
+      Имя пользователя
+      <input type="text" name="username" placeholder="Ваш никнейм" required>
+      <span class="muted">Введите имя пользователя, которое вы указали при регистрации.</span>
+    </label>
+  </div>
+
+  <div class="row">
+    <label>
+      Пароль
+      <input type="password" name="password" placeholder="Ваш пароль" required>
+      <span class="muted">Минимум 8 символов, чувствителен к регистру.</span>
+    </label>
+  </div>
+
+  <div class="actions">
+    <button type="submit">Войти</button>
+  </div>
+</form>
+
+<div id="login-error" class="status hidden" aria-live="polite"></div>
+
+<div style="margin-top: 24px; border-top: 1px solid var(--border); padding-top: 20px; display: grid; gap: 12px;">
+  <div class="muted">Или войдите с помощью одного из сервисов:</div>
+  <div class="row">
+    <a href="/google/url" class="nav-link-button" style="justify-content: center; width: 100%; text-align: center;">
+      Войти с помощью Google
+    </a>
+    <a href="/github/url" class="nav-link-button" style="justify-content: center; width: 100%; text-align: center;">
+      Войти с помощью GitHub
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (() => {
+    const form = document.getElementById("login-form");
+    if (!form) return;
+
+    const errorBox = document.getElementById("login-error");
+
+    function showError(message) {
+      if (!errorBox) return;
+      errorBox.textContent = message;
+      errorBox.classList.remove("hidden");
+      errorBox.style.color = "var(--danger)";
+    }
+
+    function clearError() {
+      if (!errorBox) return;
+      errorBox.textContent = "";
+      errorBox.classList.add("hidden");
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearError();
+
+      if (!form.reportValidity()) return;
+
+      try {
+        const formData = new FormData(form);
+
+        const response = await fetch("/jwt/login", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.ok) {
+          window.location.href = '/authenticated';
+          return;
+        }
+
+        if (!response.ok) {
+          let message = "Не удалось выполнить вход. Проверьте данные и попробуйте снова.";
+
+          try {
+            const data = await response.json();
+            if (data) {
+              if (typeof data.detail === "string") {
+                message = data.detail;
+              } else if (Array.isArray(data.detail)) {
+                const first = data.detail[0];
+                if (first && typeof first.msg === "string") {
+                  message = first.msg;
+                }
+              }
+            }
+          } catch (_) {
+          }
+
+          showError(message);
+          return;
+        }
+
+      } catch (e) {
+        console.error(e);
+        showError("Произошла ошибка сети. Проверьте подключение и попробуйте снова.");
+      }
+    });
+  })();
+</script>
+{% endblock %}
