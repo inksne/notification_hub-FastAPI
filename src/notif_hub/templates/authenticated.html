@@ -17,8 +17,7 @@
     const state = params.get("state");
     const error = params.get("error");
 
-    // Пытаемся восстановить провайдера из state,
-    // в котором мы закодировали его название при редиректе.
+
     let provider = null;
     if (typeof state === "string") {
       if (state.startsWith("google:")) {
@@ -45,15 +44,9 @@
       return;
     }
 
-    if (!code || !state) {
-      setStatus("Код авторизации не обнаружен в адресной строке. Возможно, вы уже авторизованы или перешли по прямой ссылке.");
-      return;
-    }
-
     function getCallbackUrl(providerName) {
       if (providerName === "google") return "/google/callback";
       if (providerName === "github") return "/github/callback";
-      // Если провайдер не распознан, попробуем старую стратегию с последовательными запросами.
       return null;
     }
 
@@ -80,11 +73,8 @@
         const callbackUrl = getCallbackUrl(provider);
 
         if (callbackUrl) {
-          // Новый путь — вызываем конкретный callback по провайдеру из state.
           data = await callCallback(callbackUrl);
         } else {
-          // Fallback для совместимости: сначала пытаемся Google, затем GitHub,
-          // как было раньше.
           try {
             data = await callCallback("/google/callback");
           } catch (_) {
