@@ -30,9 +30,14 @@ async def get_about_page(request: Request) -> _TemplateResponse:
     return templates.TemplateResponse(request, "about_us.html")
 
 
-@router.get("/register", response_class=HTMLResponse)
+@router.get("/jwt/register", response_class=HTMLResponse)
 async def get_register_page(request: Request) -> _TemplateResponse:
     return templates.TemplateResponse(request, "register.html")
+
+
+@router.get("/jwt/login", response_class=HTMLResponse)
+async def get_login_page(request: Request) -> _TemplateResponse:
+    return templates.TemplateResponse(request, "login.html")
 
 
 @router.get("/authenticated", response_class=HTMLResponse)
