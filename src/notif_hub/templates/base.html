@@ -221,8 +221,11 @@
       <div class="top-nav">
         <div class="muted">Единая отправка сообщений</div>
         <a href="/about" class="nav-link-button">О проекте</a>
+        {% block top_nav_guest %}
         <a href="/jwt/register" class="nav-link-button">Регистрация</a>
         <a href="/jwt/login" class="nav-link-button">Войти</a>
+        {% endblock %}
+        {% block top_nav_auth %}{% endblock %}
       </div>
     </div>
   </header>
