@@ -13,8 +13,9 @@ from .utils import hash_password
 from .schemas import UserSchema
 from ..exceptions import conflict_name_error, bad_email_error, user_exists_error, internal_server_error
 from ...database.database import get_async_session
+from ...database.models import User
 from ...database.managers import psql_manager
-from ...config import configure_logging
+from ...config import configure_logging, auth_settings
 from ...basemodels import TokenInfo
 
 
@@ -70,7 +71,7 @@ async def auth_user_issue_jwt(response: Response, user: UserSchema = Depends(val
         value=access_token,
         httponly=False,
         secure=False,
-        max_age=int(timedelta(minutes=5).total_seconds())
+        max_age=int(timedelta(minutes=auth_settings.auth_jwt.access_token_expire_minutes).total_seconds())
     )
 
     response.set_cookie(
@@ -78,7 +79,7 @@ async def auth_user_issue_jwt(response: Response, user: UserSchema = Depends(val
         value=refresh_token,
         httponly=False,
         secure=False,
-        max_age=int(timedelta(days=30).total_seconds())
+        max_age=int(timedelta(days=auth_settings.auth_jwt.refresh_token_expire_days).total_seconds())
     )
 
     return TokenInfo(access_token=access_token, refresh_token=refresh_token)
@@ -94,13 +95,16 @@ async def refresh_jwt(current_user: UserSchema = Depends(get_current_auth_user_f
         value=new_access_token,
         httponly=False,
         secure=False,
-        max_age=int(timedelta(minutes=1).total_seconds())
+        max_age=int(timedelta(minutes=auth_settings.auth_jwt.access_token_expire_minutes).total_seconds())
     )
 
     return response
 
 
-@router.post('/logout', status_code=status.HTTP_204_NO_CONTENT)
-async def logout(response: Response) -> None:
+@router.post('/logout')
+async def logout(response: Response) -> RedirectResponse:
+    response = RedirectResponse('/', status_code=status.HTTP_303_SEE_OTHER)
     response.delete_cookie(key="access_token", httponly=False, secure=False)
     response.delete_cookie(key="refresh_token", httponly=False, secure=False)
+
+    return response
