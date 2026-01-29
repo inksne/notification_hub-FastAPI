@@ -37,6 +37,31 @@ class PSQLManager():
             return None
 
 
+    async def get_or_create_oauth_user(self, email: str, username: str, hashed_password: str, session: AsyncSession) -> Optional[User]:
+        user = await self.get_user_by_username(username=username, session=session)
+
+        if user:
+            return user
+
+        try:
+            new_user = User(username=username, email=email, password=hashed_password)
+
+            session.add(new_user)
+            await session.commit()
+            await session.refresh(new_user)
+
+            return new_user
+
+        except IntegrityError:
+            await session.rollback()
+
+            user = await self.get_user_by_username(username=username, session=session)
+            if user:
+                return user
+
+            return None
+
+
     async def get_user_by_username(self, username: str | None, session: AsyncSession) -> Optional[User]:
         if not username:    # mypy
             return None
