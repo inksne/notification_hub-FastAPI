@@ -18,7 +18,23 @@
   <div class="row">
     <label>
       Пароль
-      <input type="password" name="password" placeholder="Ваш пароль" required>
+      <div style="position: relative; width: 100%;">
+        <input
+          id="login-password"
+          type="password"
+          name="password"
+          placeholder="Ваш пароль"
+          required
+          style="width: 100%; padding-right: 7rem;"
+        >
+        <button
+          type="button"
+          id="login-password-toggle"
+          style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: white; cursor: pointer;"
+        >
+          Показать
+        </button>
+      </div>
       <span class="muted">Минимум 8 символов, чувствителен к регистру.</span>
     </label>
   </div>
@@ -50,6 +66,16 @@
     if (!form) return;
 
     const errorBox = document.getElementById("login-error");
+    const passwordInput = document.getElementById("login-password");
+    const passwordToggle = document.getElementById("login-password-toggle");
+
+    if (passwordInput && passwordToggle) {
+      passwordToggle.addEventListener("click", () => {
+        const isHidden = passwordInput.type === "password";
+        passwordInput.type = isHidden ? "text" : "password";
+        passwordToggle.textContent = isHidden ? "Скрыть" : "Показать";
+      });
+    }
 
     function showError(message) {
       if (!errorBox) return;
