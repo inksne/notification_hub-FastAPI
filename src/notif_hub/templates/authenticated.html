@@ -2,6 +2,14 @@
 
 {% block title %}Успешная аутентификация · Notification Hub{% endblock %}
 
+{% block top_nav_guest %}{% endblock %}
+
+{% block top_nav_auth %}
+<form action="/jwt/logout" method="post" style="margin: 0;">
+  <button type="submit" class="nav-link-button">Выйти</button>
+</form>
+{% endblock %}
+
 {% block content %}
 <h1>Вы авторизованы</h1>
 <p id="auth-status" class="muted">Проверяем данные авторизации…</p>
@@ -75,19 +83,49 @@
         if (callbackUrl) {
           data = await callCallback(callbackUrl);
         } else {
-          try {
-            data = await callCallback("/google/callback");
-          } catch (_) {
-            data = await callCallback("/github/callback");
-          }
+          setStatus(`Аутентификация по JWT выполнена успешно.`, "--accent");
         }
 
-        setStatus("Аутентификация по OAuth выполнена успешно.", "--accent");
 
         if (data && data.user) {
           userEl.textContent = JSON.stringify(data.user, null, 2);
           userEl.classList.remove("hidden");
         }
+
+        const ACCESS_TOKEN_LIFETIME_MS = 300 * 1000;
+
+        async function refreshAccessToken() {
+          try {
+            const resp = await fetch("/jwt/refresh", {
+              method: "POST",
+              credentials: "include"
+            });
+
+            if (!resp.ok) {
+              const text = await resp.text();
+              console.error("Ошибка при обновлении access токена:", resp.status, text);
+              setStatus("Не удалось обновить access токен. Перезайдите в систему.", "--danger");
+              return;
+            }
+
+            const refreshed = await resp.json();
+            console.info("Access токен успешно обновлён:", refreshed);
+            setStatus("Сессия продлена, access токен обновлён.", "--accent");
+
+            scheduleAccessTokenRefresh();
+          } catch (err) {
+            console.error("Ошибка сети при обновлении access токена:", err);
+            setStatus("Проблема с сетью при обновлении токена. Попробуйте перезагрузить страницу.", "--danger");
+          }
+        }
+
+        function scheduleAccessTokenRefresh() {
+          window.setTimeout(() => {
+            refreshAccessToken();
+          }, ACCESS_TOKEN_LIFETIME_MS);
+        }
+
+        scheduleAccessTokenRefresh();
       } catch (e) {
         console.error(e);
         setStatus("Не удалось получить данные пользователя по коду авторизации. Попробуйте снова.", "--danger");
