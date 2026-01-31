@@ -37,5 +37,5 @@ class AuthJWT(BaseModel):
     private_key_path: Path = Path("src/notif_hub/certs") / "jwt-private.pem"
     public_key_path: Path = Path("src/notif_hub/certs") / "jwt-public.pem"
     algorithm: Final[str] = "RS256"
-    access_token_expire_minutes: int = 5
+    access_token_expire_minutes: int = 3
     refresh_token_expire_days: int = 30
