@@ -47,7 +47,7 @@ class ConstantSettings(BaseSettings):
     ACCESS_TOKEN_TYPE: Final[str] = "access"
     REFRESH_TOKEN_TYPE: Final[str] = "refresh"
 
-    APP_VERSION: Final[str] = "0.1.14"
+    APP_VERSION: Final[str] = "0.1.15"
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(__file__), '..', '..', '.env'),
