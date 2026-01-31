@@ -6,7 +6,7 @@ from starlette.templating import _TemplateResponse
 import logging
 from pathlib import Path
 
-from ..config import configure_logging
+from ..config import auth_settings, configure_logging
 
 
 configure_logging()
@@ -41,5 +41,11 @@ async def get_login_page(request: Request) -> _TemplateResponse:
 
 
 @router.get("/authenticated", response_class=HTMLResponse)
-async def get_authenticated_page(request: Request) -> _TemplateResponse:
-    return templates.TemplateResponse(request, "authenticated.html")
+async def get_authenticated_page(
+    request: Request,
+) -> _TemplateResponse:
+    return templates.TemplateResponse(
+        request, "authenticated.html", {
+            "ACCESS_TOKEN_LIFETIME": auth_settings.auth_jwt.access_token_expire_minutes * 60000 # ms
+        }
+    )

@@ -11,9 +11,7 @@
 {% endblock %}
 
 {% block content %}
-<h1>Вы авторизованы</h1>
-<p id="auth-status" class="muted">Проверяем данные авторизации…</p>
-<pre id="auth-user" class="status hidden" style="margin-top: 16px; white-space: pre-wrap;"></pre>
+{{ super() }}
 {% endblock %}
 
 {% block scripts %}
@@ -33,23 +31,6 @@
       } else if (state.startsWith("github:")) {
         provider = "github";
       }
-    }
-
-    const statusEl = document.getElementById("auth-status");
-    const userEl = document.getElementById("auth-user");
-
-    if (!statusEl || !userEl) {
-      return;
-    }
-
-    function setStatus(message, colorVar = "--muted") {
-      statusEl.textContent = message;
-      statusEl.style.color = `var(${colorVar})`;
-    }
-
-    if (error) {
-      setStatus(`Произошла ошибка при аутентификации: ${error}`, "--danger");
-      return;
     }
 
     function getCallbackUrl(providerName) {
@@ -82,8 +63,6 @@
 
         if (callbackUrl) {
           data = await callCallback(callbackUrl);
-        } else {
-          setStatus(`Аутентификация по JWT выполнена успешно.`, "--accent");
         }
 
 
@@ -92,7 +71,7 @@
           userEl.classList.remove("hidden");
         }
 
-        const ACCESS_TOKEN_LIFETIME_MS = 300 * 1000;
+        const ACCESS_TOKEN_LIFETIME_MS = "{{ ACCESS_TOKEN_LIFETIME }}";
 
         async function refreshAccessToken() {
           try {
@@ -104,18 +83,15 @@
             if (!resp.ok) {
               const text = await resp.text();
               console.error("Ошибка при обновлении access токена:", resp.status, text);
-              setStatus("Не удалось обновить access токен. Перезайдите в систему.", "--danger");
               return;
             }
 
             const refreshed = await resp.json();
             console.info("Access токен успешно обновлён:", refreshed);
-            setStatus("Сессия продлена, access токен обновлён.", "--accent");
 
             scheduleAccessTokenRefresh();
           } catch (err) {
             console.error("Ошибка сети при обновлении access токена:", err);
-            setStatus("Проблема с сетью при обновлении токена. Попробуйте перезагрузить страницу.", "--danger");
           }
         }
 
@@ -128,7 +104,6 @@
         scheduleAccessTokenRefresh();
       } catch (e) {
         console.error(e);
-        setStatus("Не удалось получить данные пользователя по коду авторизации. Попробуйте снова.", "--danger");
       }
     })();
   })();
