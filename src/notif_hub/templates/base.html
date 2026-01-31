@@ -224,6 +224,7 @@
         {% block top_nav_guest %}
         <a href="/jwt/register" class="nav-link-button">Регистрация</a>
         <a href="/jwt/login" class="nav-link-button">Войти</a>
+        <a href="/jwt/check_tokens" class="nav-link-button" id="check-auth-btn">Для авторизованных</a>
         {% endblock %}
         {% block top_nav_auth %}{% endblock %}
       </div>
@@ -360,7 +361,6 @@
           const inputs = el.querySelectorAll("input, select");
           const visible = selected.includes(key);
           inputs.forEach(input => {
-            // Пропускаем поле param_name, оно управляется отдельно
             if (input.id === "webhook_param_name") {
               return;
             }
@@ -436,8 +436,7 @@
                 url: urlInput.value,
                 format: formatSelect.value
               };
-              
-              // Для формата form используем значение из поля, иначе значение по умолчанию
+
               if (formatSelect.value === "form") {
                 webhookTarget.param_name = paramNameInput.value || "message";
               } else {
@@ -459,7 +458,6 @@
           });
 
           if (!response.ok) {
-            // Пытаемся извлечь сообщение об ошибке из ответа
             let errorMessage = "Не удалось отправить уведомление. Попробуйте ещё раз позже.";
             
             try {
@@ -468,7 +466,6 @@
                 errorMessage = errorData.detail;
               }
             } catch (jsonError) {
-              // Если не удалось распарсить JSON, используем сообщение по умолчанию
               console.error("Не удалось распарсить ответ об ошибке:", jsonError);
             }
             
