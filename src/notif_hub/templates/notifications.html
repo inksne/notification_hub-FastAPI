@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Мои уведомления · Notification Hub{% endblock %}
+
+{% block top_nav_guest %}{% endblock %}
+
+{% block top_nav_auth %}
+<a href="/jwt/check_tokens" class="nav-link-button" id="check-auth-btn">Для авторизованных</a>
+<a href="/authenticated/notifications" class="nav-link-button">Мои уведомления</a>
+<form action="/jwt/logout" method="post" style="margin: 0;">
+  <button type="submit" class="nav-link-button">Выйти</button>
+</form>
+{% endblock %}
+
+{% block content %}
+<h1>Мои уведомления</h1>
+<p>Список всех ваших уведомлений. Загрузка выполняется при открытии страницы.</p>
+
+<ul id="notifications-list" class="notifications-list" style="list-style: none; padding: 0; margin: 16px 0 0; display: none;"></ul>
+
+<div id="notifications-empty" class="muted" style="display: none; margin-top: 16px;">
+  У вас пока нет уведомлений.
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<style>
+  .notifications-list { display: flex; flex-direction: column; gap: 12px; }
+  .notification-card {
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--bg) 50%, transparent);
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+  }
+  .notification-content { margin: 0; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+  .notification-meta { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .notification-channels { display: flex; gap: 6px; flex-wrap: wrap; }
+  .notification-channels .pill { font-size: 11px; padding: 4px 8px; }
+  .notification-actions { display: flex; gap: 8px; }
+</style>
+<script>
+  (() => {
+    const params = new URLSearchParams(window.location.search || "");
+    const code = params.get("code");
+    const state = params.get("state");
+    const error = params.get("error");
+
+
+    let provider = null;
+    if (typeof state === "string") {
+      if (state.startsWith("google:")) {
+        provider = "google";
+      } else if (state.startsWith("github:")) {
+        provider = "github";
+      }
+    }
+
+    function getCallbackUrl(providerName) {
+      if (providerName === "google") return "/google/callback";
+      if (providerName === "github") return "/github/callback";
+      return null;
+    }
+
+    async function callCallback(url) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ code, state })
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Запрос к ${url} завершился с ошибкой ${response.status}: ${text}`);
+      }
+
+      return response.json();
+    }
+
+    (async () => {
+      try {
+        let data;
+        const callbackUrl = getCallbackUrl(provider);
+
+        if (callbackUrl) {
+          data = await callCallback(callbackUrl);
+        }
+
+        const ACCESS_TOKEN_LIFETIME_MS = "{{ ACCESS_TOKEN_LIFETIME }}";
+
+        async function refreshAccessToken() {
+          try {
+            const resp = await fetch("/jwt/refresh", {
+              method: "POST",
+              credentials: "include"
+            });
+
+            if (!resp.ok) {
+              const text = await resp.text();
+              console.error("Ошибка при обновлении access токена:", resp.status, text);
+              return;
+            }
+
+            const refreshed = await resp.json();
+            console.info("Access токен успешно обновлён:", refreshed);
+
+            scheduleAccessTokenRefresh();
+          } catch (err) {
+            console.error("Ошибка сети при обновлении access токена:", err);
+          }
+        }
+
+        function scheduleAccessTokenRefresh() {
+          window.setTimeout(() => {
+            refreshAccessToken();
+          }, ACCESS_TOKEN_LIFETIME_MS);
+        }
+
+        scheduleAccessTokenRefresh();
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  })();
+
+  (() => {
+    const listEl = document.getElementById("notifications-list");
+    const emptyEl = document.getElementById("notifications-empty");
+
+    async function loadNotifications() {
+      listEl.style.display = "none";
+      emptyEl.style.display = "none";
+
+      try {
+        const response = await fetch("/authenticated/notifications/get_all_notifications", {
+          credentials: "include"
+        });
+
+        const notifications = await response.json();
+
+        if (!Array.isArray(notifications) || notifications.length === 0) {
+          emptyEl.style.display = "block";
+          return;
+        }
+
+        listEl.innerHTML = "";
+        notifications.forEach((n) => {
+          const li = document.createElement("li");
+          li.className = "notification-card";
+
+          const channels = Array.isArray(n.channels) ? n.channels : [];
+          const channelsHtml = channels
+            .map((ch) => `<span class="pill">${escapeHtml(ch)}</span>`)
+            .join("");
+
+          const content = escapeHtml(String(n.content || ""));
+
+          li.innerHTML = `
+            <div>
+              <p class="notification-content">${content}</p>
+              <div class="notification-meta">
+                <span>#${escapeHtml(String(n.id))}</span>
+                <div class="notification-channels">${channelsHtml}</div>
+              </div>
+            </div>
+            <div class="notification-actions">
+              <button type="button" class="ghost" data-notification-id="${n.id}" data-action="delete">Удалить</button>
+            </div>
+          `;
+
+          const deleteBtn = li.querySelector("[data-action='delete']");
+          deleteBtn.addEventListener("click", () => deleteNotification(n.id, li));
+
+          listEl.appendChild(li);
+        });
+        listEl.style.display = "flex";
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    async function deleteNotification(id, listItem) {
+      try {
+        const response = await fetch(
+          `/authenticated/notifications/delete_notification?notification_id=${encodeURIComponent(id)}`,
+          { method: "DELETE", credentials: "include" }
+        );
+
+        listItem.remove();
+        const remaining = listEl.querySelectorAll("li");
+        if (remaining.length === 0) {
+          listEl.style.display = "none";
+          emptyEl.style.display = "block";
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    loadNotifications();
+  })();
+</script>
+{% endblock %}
