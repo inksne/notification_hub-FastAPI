@@ -5,6 +5,7 @@
 {% block top_nav_guest %}{% endblock %}
 
 {% block top_nav_auth %}
+<a href="/authenticated/notifications" class="nav-link-button">Мои уведомления</a>
 <form action="/jwt/logout" method="post" style="margin: 0;">
   <button type="submit" class="nav-link-button">Выйти</button>
 </form>
@@ -63,12 +64,6 @@
 
         if (callbackUrl) {
           data = await callCallback(callbackUrl);
-        }
-
-
-        if (data && data.user) {
-          userEl.textContent = JSON.stringify(data.user, null, 2);
-          userEl.classList.remove("hidden");
         }
 
         const ACCESS_TOKEN_LIFETIME_MS = "{{ ACCESS_TOKEN_LIFETIME }}";
