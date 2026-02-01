@@ -136,4 +136,8 @@ async def logout(response: Response) -> RedirectResponse:
 async def check_token(
     current_user: User = Depends(get_current_auth_user)
 ) -> RedirectResponse:
+    '''
+    Если пользователь не авторизован, то его не перекинет на страницу авторизации
+    Если у пользователя в куки имеются access и refresh токены, и они валидны, то его перекинет на /authenticated
+    '''
     return RedirectResponse('/authenticated', status.HTTP_303_SEE_OTHER)
