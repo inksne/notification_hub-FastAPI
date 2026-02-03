@@ -24,6 +24,7 @@ class Notification(Base):
     channels: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False)
+    recipient: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False)
 
     user: Mapped['User'] = relationship('User', back_populates='notifications')
 
