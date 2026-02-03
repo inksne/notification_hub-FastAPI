@@ -40,6 +40,8 @@
   .notification-content { margin: 0; color: var(--text); white-space: pre-wrap; word-break: break-word; }
   .notification-meta { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .notification-channels { display: flex; gap: 6px; flex-wrap: wrap; }
+  .notification-recipients { display: flex; gap: 6px; flex-wrap: wrap; }
+  .notification-recipients-label { font-weight: 500; margin-right: 4px; }
   .notification-channels .pill { font-size: 11px; padding: 4px 8px; }
   .notification-actions { display: flex; gap: 8px; }
 </style>
@@ -159,6 +161,11 @@
             .map((ch) => `<span class="pill">${escapeHtml(ch)}</span>`)
             .join("");
 
+          const recipients = Array.isArray(n.recipient) ? n.recipient : [];
+          const recipientsHtml = recipients
+            .map((r) => `<span class="pill">${escapeHtml(String(r))}</span>`)
+            .join("");
+
           const content = escapeHtml(String(n.content || ""));
 
           li.innerHTML = `
@@ -167,6 +174,10 @@
               <div class="notification-meta">
                 <span>#${escapeHtml(String(n.id))}</span>
                 <div class="notification-channels">${channelsHtml}</div>
+                ${recipientsHtml
+                  ? `<div class="notification-recipients"><span class="notification-recipients-label">Получатели:</span>${recipientsHtml}</div>`
+                  : ""
+                }
               </div>
             </div>
             <div class="notification-actions">
