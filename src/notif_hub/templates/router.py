@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import logging
 from pathlib import Path
+from typing import Sequence
 
 from ..config import auth_settings, configure_logging
 from ..auth import get_current_auth_user
@@ -68,20 +69,10 @@ async def get_notifications_page(
 async def get_all_notifications(
     current_user: User = Depends(get_current_auth_user),
     session: AsyncSession = Depends(get_async_session)
-) -> list[Notification]:
+) -> Sequence[Notification]:
     notifications = await psql_manager.get_notifications(user_id=current_user.id, session=session)
 
     return notifications
-
-
-@router.post("/authenticated/notifications/add_notification")
-async def add_notification(
-    channels: list[str],
-    content: str,
-    current_user: User = Depends(get_current_auth_user),
-    session: AsyncSession = Depends(get_async_session)
-) -> None:
-    await psql_manager.add_notification(channels=channels, content=content, user_id=current_user.id, session=session)
 
 
 @router.delete("/authenticated/notifications/delete_notification")
