@@ -90,4 +90,4 @@ async def delete_notification(
     current_user: User = Depends(get_current_auth_user),
     session: AsyncSession = Depends(get_async_session)
 ) -> None:
-    await psql_manager.delete_notification(notification_id=notification_id, user_id=current_user.id, session=session)
+    await psql_manager.delete_notification(notification_id=notification_id, session=session)
