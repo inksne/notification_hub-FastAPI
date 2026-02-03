@@ -449,7 +449,11 @@
         });
 
         try {
-          const response = await fetch("/api/v1/channels", {
+          const endpoint = window.location.pathname.startsWith("/authenticated")
+            ? "/api/v1/channels_auth"
+            : "/api/v1/channels";
+
+          const response = await fetch(endpoint, {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
