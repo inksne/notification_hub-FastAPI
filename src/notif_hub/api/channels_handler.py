@@ -56,6 +56,9 @@ async def handle_auth_channels(
             username=current_user.username, session=session
         )
 
+        if not user:    # mypy
+            raise internal_server_error
+
         await psql_manager.add_notification(
             channels=data.targets,
             content=data_notification_message,

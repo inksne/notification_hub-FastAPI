@@ -2,7 +2,7 @@ from starlette import status
 
 import httpx
 import logging
-from typing import Union
+from typing import Any, NoReturn
 
 from ..config import configure_logging
 from ..basemodels import (
@@ -31,9 +31,9 @@ logger = logging.getLogger(__name__)
 
 
 
-async def process_channels(data: ChannelsHandlerModel) -> Union[str, list[str]]:
+async def process_channels(data: ChannelsHandlerModel) -> tuple[str, list[str | dict[Any, Any]]]:
     data_notification_message: str = ''
-    recipient: list[str] = []
+    recipient: list[str | dict[Any, Any]] = []
 
     if 'telegram' in data.targets:
         telegram_target = data.targets['telegram']
@@ -99,7 +99,7 @@ async def process_channels(data: ChannelsHandlerModel) -> Union[str, list[str]]:
     return data_notification_message, recipient
 
 
-def handle_http_status_errors(e: httpx.HTTPStatusError) -> None:
+def handle_http_status_errors(e: httpx.HTTPStatusError) -> NoReturn:
     status_code = e.response.status_code
 
     if status_code == status.HTTP_400_BAD_REQUEST:
