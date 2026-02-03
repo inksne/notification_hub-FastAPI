@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Body, Response, Depends
+from fastapi import APIRouter, Body, Depends
 from fastapi.responses import RedirectResponse, JSONResponse
 from starlette import status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 import httpx
 import jwt
-from typing import Any
 from datetime import timedelta
 
 from ..config import configure_logging, constant_settings, auth_settings
