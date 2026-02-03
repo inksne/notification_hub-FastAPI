@@ -15,6 +15,7 @@ def run_mypy_checks():
         ("utils.py", "src/notif_hub/auth/cookie_auth/utils.py"),
         ("validation.py", "src/notif_hub/auth/cookie_auth/validation.py"),
         ('channels_handler.py', 'src/notif_hub/api/channels_handler.py'),
+        ('channels_helpers.py', 'src/notif_hub/api/channels_helpers.py'),
         ('telegram_handler.py', 'src/notif_hub/api/telegram_handler.py'),
         ('email_handler.py', 'src/notif_hub/api/email_handler.py'),
         ('email_helpers.py', 'src/notif_hub/api/email_helpers.py'),
