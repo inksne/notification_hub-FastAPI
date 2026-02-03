@@ -1,30 +1,18 @@
-from fastapi import APIRouter, HTTPException
-from starlette import status
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 
 import logging
 import httpx
 
-from .email_handler import handle_email_notify
-from .telegram_handler import handle_telegram_notify
-from .webhook_handler import handle_webhook_notify
-from ..config import configure_logging
-from ..basemodels import (
-    ChannelsHandlerModel,
-    EmailRequestModel,
-    TelegramHandlerModel,
-    WebhookRequestModel,
-)
-from .exceptions import (
-    internal_server_error,
-    webhook_bad_request_error,
-    webhook_forbidden_error,
-    webhook_method_not_allowed_error,
-    webhook_not_found_error,
-    webhook_too_many_requests_error,
-    webhook_unauthorized_error,
-    webhook_unavailable_for_legal_reasons_error,
-)
+from .channels_helpers import process_channels, handle_http_status_errors
 from .texts import generate_channels_response
+from .exceptions import internal_server_error, httpx_connect_error
+from ..config import configure_logging
+from ..auth import get_current_auth_user
+from ..database.database import get_async_session
+from ..database.managers import psql_manager
+from ..database.models import User
+from ..basemodels import ChannelsHandlerModel
 
 
 
@@ -38,81 +26,51 @@ logger = logging.getLogger(__name__)
 @router.post('/channels')
 async def handle_channels(data: ChannelsHandlerModel) -> dict[str, str]:
     try:
-        if 'telegram' in data.targets:
-            telegram_target = data.targets['telegram']
+        await process_channels(data)
+        return generate_channels_response(data=data)
 
-            if not isinstance(telegram_target, str):
-                raise ValueError("mypy")
+    except httpx.HTTPStatusError as e:
+        handle_http_status_errors(e)
 
-            telegram_username = telegram_target
+    except httpx.ConnectError as e:
+        raise httpx_connect_error
 
-            if telegram_username.startswith('@'):
-                telegram_username = telegram_username[1:]
+    except HTTPException:
+        raise
 
-            telegram_request = TelegramHandlerModel(
-                message=data.messages['telegram'],
-                username=telegram_username
-            )
+    except Exception as e:
+        logger.error(e)
+        raise internal_server_error
 
-            await handle_telegram_notify(telegram_request)
 
-        if 'email' in data.targets:
-            email_target = data.targets['email']
+@router.post('/channels_auth')
+async def handle_auth_channels(
+    data: ChannelsHandlerModel,
+    current_user: User = Depends(get_current_auth_user),
+    session: AsyncSession = Depends(get_async_session)
+) -> dict[str, str]:
+    try:
+        data_notification_message, recipient = await process_channels(data)
 
-            if not isinstance(email_target, str):
-                raise ValueError("mypy")
+        user = await psql_manager.get_user_by_username(
+            username=current_user.username, session=session
+        )
 
-            email_request = EmailRequestModel(
-                body=data.messages['email'],
-                to_email=email_target
-            )
-
-            await handle_email_notify(email_request)
-
-        if 'webhook' in data.targets:
-            webhook_target = data.targets['webhook']
-
-            if not isinstance(webhook_target, dict):
-                raise ValueError("mypy")
-
-            webhook_request = WebhookRequestModel(
-                message=data.messages['webhook'],
-                url=webhook_target['url'],
-                format=webhook_target['format'],
-                param_name=webhook_target['param_name']
-            )
-
-            await handle_webhook_notify(webhook_request)
+        await psql_manager.add_notification(
+            channels=data.targets,
+            content=data_notification_message,
+            user_id=user.id,
+            recipient=recipient,
+            session=session
+        )
 
         return generate_channels_response(data=data)
 
     except httpx.HTTPStatusError as e:
-        status_code = e.response.status_code
-            
-        if status_code == status.HTTP_400_BAD_REQUEST:
-            raise webhook_bad_request_error
+        handle_http_status_errors(e)
 
-        elif status_code == status.HTTP_401_UNAUTHORIZED:
-            raise webhook_unauthorized_error
-
-        elif status_code == status.HTTP_403_FORBIDDEN:
-            raise webhook_forbidden_error
-
-        elif status_code == status.HTTP_404_NOT_FOUND:
-            raise webhook_not_found_error
-
-        elif status_code == status.HTTP_405_METHOD_NOT_ALLOWED:
-            raise webhook_method_not_allowed_error
-
-        elif status_code == status.HTTP_429_TOO_MANY_REQUESTS:
-            raise webhook_too_many_requests_error
-
-        elif status_code == status.HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS:
-            raise webhook_unavailable_for_legal_reasons_error
-
-        else:
-            logger.error(e)
-            raise internal_server_error
+    except httpx.ConnectError as e:
+        raise httpx_connect_error
 
     except HTTPException:
         raise
