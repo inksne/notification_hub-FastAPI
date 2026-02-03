@@ -112,10 +112,17 @@ class PSQLManager():
 
 
     async def add_notification(
-        self, channels: list[str], content: str, user_id: int, session: AsyncSession
+        self,
+        channels: list[str],
+        content: str,
+        user_id: int,
+        recipient: list[str],
+        session: AsyncSession
     ) -> None:
 
-        new_notification = Notification(channels=channels, content=content, user_id=user_id)
+        new_notification = Notification(
+            channels=channels, content=content, user_id=user_id, recipient=recipient
+        )
 
         session.add(new_notification)
 
