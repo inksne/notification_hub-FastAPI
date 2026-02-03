@@ -11,7 +11,7 @@ internal_server_error = HTTPException(
 
 telegram_forbidden_error = HTTPException(
     status.HTTP_403_FORBIDDEN,
-    detail='Невозможно отправить сообщению пользователю. Скорее всего он не начал диалог с ботом, либо заблокировал бота.'
+    detail='Невозможно отправить сообщению пользователю. Скорее всего, он не начал диалог с ботом, либо заблокировал бота.'
 )
 
 
@@ -23,7 +23,7 @@ telegram_retry_after_error = HTTPException(
 
 webhook_bad_request_error = HTTPException(
     status.HTTP_400_BAD_REQUEST,
-    detail='Ошибка в запросе. Скорее всего сервер не принимает сообщения с указанным параметром или в указанной форме.'
+    detail='Ошибка в запросе. Скорее всего, сервер не принимает сообщения с указанным параметром или в указанной форме.'
 )
 
 
@@ -41,7 +41,7 @@ webhook_forbidden_error = HTTPException(
 
 webhook_not_found_error = HTTPException(
     status.HTTP_404_NOT_FOUND,
-    detail='Запрашиваемый ресурс не найден. Возможно, ошибка в написании url.'
+    detail='Запрашиваемый ресурс не найден. Возможно, допущена ошибка в написании url.'
 )
 
 
@@ -59,5 +59,11 @@ webhook_too_many_requests_error = HTTPException(
 
 webhook_unavailable_for_legal_reasons_error = HTTPException(
     status.HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS,
-    detail='Запрашиваемый ресурс не может предоставлен по закону.'
+    detail='Запрашиваемый ресурс не может быть предоставлен по закону.'
+)
+
+
+httpx_connect_error = HTTPException(
+    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+    detail='Не удалось отправить запрос на сервер. Скорее всего, допущена ошибка при написании url сервера.'
 )
