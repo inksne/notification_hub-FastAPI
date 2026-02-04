@@ -1,5 +1,7 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
+import secrets
+import hashlib
 
 from .schemas import UserSchema
 from .utils import encode_jwt
@@ -13,7 +15,6 @@ def create_jwt(
     expire_minutes: int = auth_settings.auth_jwt.access_token_expire_minutes,
     expire_timedelta: timedelta | None = None
 ) -> str:
-    
     jwt_payload = {constant_settings.TOKEN_TYPE_FIELD: token_type}
     jwt_payload.update(token_data)
 
@@ -32,11 +33,13 @@ def create_access_token(user: UserSchema) -> str:
 
 
 
-def create_refresh_token(user: UserSchema) -> str:
-    jwt_payload = {"sub": user.username}
+def create_refresh_token() -> str:
+    return secrets.token_urlsafe(32)
 
-    return create_jwt(
-        token_type=constant_settings.REFRESH_TOKEN_TYPE,
-        token_data=jwt_payload,
-        expire_timedelta=timedelta(days=auth_settings.auth_jwt.refresh_token_expire_days)
-    )
+
+def get_refresh_expires_at() -> datetime:
+    return datetime.now(timezone.utc) + timedelta(days=auth_settings.auth_jwt.refresh_token_expire_days)
+
+
+def hash_refresh_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
