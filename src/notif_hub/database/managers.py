@@ -4,9 +4,10 @@ from sqlalchemy.future import select
 
 import logging
 from typing import Optional, Sequence
+from datetime import datetime
 import redis.asyncio as redis
 
-from .models import User, Chat_id, Notification
+from .models import User, Chat_id, Notification, Refresh_token
 from ..config import configure_logging, constant_settings
 
 
@@ -67,6 +68,16 @@ class PSQLManager():
             return None
 
         result = await session.execute(select(User).where(User.username == username))
+        user = result.scalars().first()
+
+        if user is None:
+            return None
+
+        return user
+
+
+    async def get_user_by_user_id(self, user_id: int, session: AsyncSession) -> Optional[User]:
+        result = await session.execute(select(User).where(User.id == user_id))
         user = result.scalars().first()
 
         if user is None:
@@ -148,6 +159,84 @@ class PSQLManager():
         result_notification = notification.scalar_one_or_none()
 
         await session.delete(result_notification)
+        await session.commit()
+
+
+    async def add_refresh_token_hash(
+        self,
+        username: str,
+        refresh_token_hash: str,
+        expires_at: datetime,
+        session: AsyncSession
+    ) -> None:
+        user = await self.get_user_by_username(username=username, session=session)
+        if not user:    # mypy
+            raise ValueError
+
+        new_refresh = Refresh_token(
+            user_id=user.id,
+            refresh_token_hash=refresh_token_hash,
+            expires_at=expires_at,
+        )
+
+        session.add(new_refresh)
+
+        await session.commit()
+        await session.refresh(new_refresh)
+
+
+    async def get_refresh_token_hash(
+        self,
+        refresh_token_hash: str,
+        now: datetime,
+        session: AsyncSession
+    ) -> Optional[Refresh_token]:
+        result = await session.execute(
+            select(Refresh_token).where(
+                Refresh_token.refresh_token_hash == refresh_token_hash,
+                Refresh_token.is_revoked.is_(False),
+                Refresh_token.expires_at > now,
+            )
+        )
+
+        refresh = result.scalars().first()
+
+        return refresh
+
+
+    async def update_refresh_token_hash(
+        self,
+        refresh_token_hash: str,
+        now: datetime,
+        new_refresh_token_hash: str,
+        new_expires_at: datetime,
+        session: AsyncSession
+    ) -> None:
+        db_refresh_token_hash = await self.get_refresh_token_hash(
+            refresh_token_hash=refresh_token_hash,
+            now=now,
+            session=session
+        )
+
+        if not db_refresh_token_hash:    # mypy
+            raise ValueError
+
+        db_refresh_token_hash.refresh_token_hash =new_refresh_token_hash
+        db_refresh_token_hash.expires_at = new_expires_at
+
+        session.add(db_refresh_token_hash)
+
+        await session.commit()
+        await session.refresh(db_refresh_token_hash)
+
+
+    async def delete_refresh_token_hash(
+        self,
+        db_refresh_token_hash: Refresh_token,
+        session: AsyncSession
+    ) -> None:
+        await session.delete(db_refresh_token_hash)
+
         await session.commit()
 
 
