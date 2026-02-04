@@ -14,7 +14,12 @@ from ..database.managers import redis_manager, psql_manager
 from ..database.database import get_async_session
 from .oauth_google import generate_google_oauth_redirect_uri
 from .jwt_parse import parse_user_data
-from .cookie_auth.helpers import create_access_token, create_refresh_token
+from .cookie_auth.helpers import (
+    create_access_token,
+    create_refresh_token,
+    get_refresh_expires_at,
+    hash_refresh_token
+)
 from .cookie_auth.schemas import UserSchema
 from .cookie_auth.utils import hash_password
 from .exceptions import (
@@ -93,13 +98,23 @@ async def handle_google_code(
 
                 user_schema = UserSchema.from_attributes(db_user)
 
-                access_token = create_access_token(user_schema)
-                refresh_token = create_refresh_token(user_schema)
+                access_token_jwt = create_access_token(user_schema)
+                refresh_token_oraque = create_refresh_token()
+
+                expires_at = get_refresh_expires_at()
+                refresh_token_hash = hash_refresh_token(refresh_token_oraque)
+
+                await psql_manager.add_refresh_token_hash(
+                    username=db_user.username,
+                    refresh_token_hash=refresh_token_hash,
+                    expires_at=expires_at,
+                    session=session
+                )
 
                 resp = JSONResponse(content={"user": user_data})
                 resp.set_cookie(
                     key="access_token",
-                    value=access_token,
+                    value=access_token_jwt,
                     httponly=False,
                     secure=False,
                     max_age=int(
@@ -110,7 +125,7 @@ async def handle_google_code(
                 )
                 resp.set_cookie(
                     key="refresh_token",
-                    value=refresh_token,
+                    value=refresh_token_oraque,
                     httponly=False,
                     secure=False,
                     max_age=int(
