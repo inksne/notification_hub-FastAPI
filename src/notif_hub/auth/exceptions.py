@@ -34,7 +34,7 @@ bad_email_error = HTTPException(
 
 
 bad_token_error = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED, 
+    status_code=status.HTTP_401_UNAUTHORIZED,
     detail=f'Неверный токен.',
 )
 
