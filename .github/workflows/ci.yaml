@@ -1,0 +1,104 @@
+name: Notification Hub CI Pipeline
+
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest 
+
+    env:
+      POSTGRES_USER: ${{ secrets.DB_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.DB_PASS }}
+      POSTGRES_DB: ${{ secrets.DB_NAME }}
+      POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+
+      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+
+      TELEGRAM_API_KEY: ${{ secrets.TELEGRAM_API_KEY }}
+
+      EMAIL_SENDER_ADDRESS: ${{ secrets.EMAIL_SENDER_ADDRESS }}
+      EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+
+      OAUTH_GOOGLE_CLIENT_SECRET: ${{ secrets.OAUTH_GOOGLE_CLIENT_SECRET }}
+      OAUTH_GOOGLE_CLIENT_ID: ${{ secrets.OAUTH_GOOGLE_CLIENT_ID }}
+
+      OAUTH_GITHUB_CLIENT_ID: ${{ secrets.OAUTH_GITHUB_CLIENT_ID }}
+      OAUTH_GITHUB_CLIENT_SECRET: ${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t inksne/notif-hub-back-image:latest .
+
+      - name: Push Docker image to DockerHub
+        run: |
+          docker push inksne/notif-hub-back-image:latest
+
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build  
+    
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Pull Docker image from DockerHub
+        run: |
+          docker pull inksne/notif-hub-back-image:latest
+
+      - name: Run tests
+        run: |
+          docker run \
+            -e POSTGRES_DB="${{ secrets.DB_NAME }}" \
+            -e POSTGRES_USER="${{ secrets.DB_USER }}" \
+            -e POSTGRES_PASSWORD="${{ secrets.DB_PASS }}" \
+            -e POSTGRES_HOST="${{ secrets.POSTGRES_HOST }}" \
+
+            -e REDIS_HOST="${{ secrets.REDIS_HOST }}" \
+
+            -e TELEGRAM_API_KEY="${{ secrets.TELEGRAM_API_KEY }}" \
+
+            -e EMAIL_SENDER_ADDRESS="${{ secrets.EMAIL_SENDER_ADDRESS }}"
+            -e EMAIL_PASSWORD="${{ secrets.EMAIL_PASSWORD }}" \
+
+            -e OAUTH_GOOGLE_CLIENT_SECRET="${{ secrets.OAUTH_GOOGLE_CLIENT_SECRET }}" \
+            -e OAUTH_GOOGLE_CLIENT_ID="${{ secrets.OAUTH_GOOGLE_CLIENT_ID }}" \
+
+            -e OAUTH_GITHUB_CLIENT_ID="${{ secrets.OAUTH_GITHUB_CLIENT_ID }}" \
+            -e OAUTH_GITHUB_CLIENT_SECRET="${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}" \
+            --rm inksne/notif-hub-back-image pytest -v -s
+
+
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: test  
+
+  #   steps:
+  #     - name: Check out repository
+  #       uses: actions/checkout@v3
+
+  #     - name: Set up Docker Compose
+  #       run: |
+  #         docker-compose up -d
