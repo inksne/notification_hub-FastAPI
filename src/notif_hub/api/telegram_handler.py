@@ -29,6 +29,9 @@ async def handle_telegram_notify(data: TelegramHandlerModel) -> dict[str, str]:
         async for session in get_async_session():
             chat_id = await psql_manager.get_chat_id(username=data.username, session=session)
 
+        if not chat_id:
+            raise telegram_forbidden_error
+
         await bot.send_message(chat_id=chat_id, text=generate_notify_text(data.message))
 
         return generate_telegram_response(data=data)
