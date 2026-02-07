@@ -49,26 +49,26 @@ jobs:
         run: |
           docker pull inksne/notif-hub-back-image:latest
 
-      - name: Run tests
+      - name: Create .env file for tests
         run: |
-          docker run --rm -e POSTGRES_DB="${{ secrets.DB_NAME }}" \
-            -e POSTGRES_USER="${{ secrets.DB_USER }}" \
-            -e POSTGRES_PASSWORD="${{ secrets.DB_PASS }}" \
-            -e POSTGRES_HOST="${{ secrets.POSTGRES_HOST }}" \
+          cat > .env <<EOF
+          POSTGRES_DB=${{ secrets.DB_NAME }}
+          POSTGRES_USER=${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD=${{ secrets.DB_PASS }}
+          POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+          REDIS_HOST=${{ secrets.REDIS_HOST }}
+          TELEGRAM_API_KEY=${{ secrets.TELEGRAM_API_KEY }}
+          EMAIL_SENDER_ADDRESS=${{ secrets.EMAIL_SENDER_ADDRESS }}
+          EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}
+          OAUTH_GOOGLE_CLIENT_SECRET=${{ secrets.OAUTH_GOOGLE_CLIENT_SECRET }}
+          OAUTH_GOOGLE_CLIENT_ID=${{ secrets.OAUTH_GOOGLE_CLIENT_ID }}
+          OAUTH_GITHUB_CLIENT_ID=${{ secrets.OAUTH_GITHUB_CLIENT_ID }}
+          OAUTH_GITHUB_CLIENT_SECRET=${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}
+          EOF
 
-            -e REDIS_HOST="${{ secrets.REDIS_HOST }}" \
+      - name: Run tests (using --env-file)
+        run: docker run --rm --env-file .env inksne/notif-hub-back-image:latest pytest -v -s
 
-            -e TELEGRAM_API_KEY="${{ secrets.TELEGRAM_API_KEY }}" \
-
-            -e EMAIL_SENDER_ADDRESS="${{ secrets.EMAIL_SENDER_ADDRESS }}"
-            -e EMAIL_PASSWORD="${{ secrets.EMAIL_PASSWORD }}" \
-
-            -e OAUTH_GOOGLE_CLIENT_SECRET="${{ secrets.OAUTH_GOOGLE_CLIENT_SECRET }}" \
-            -e OAUTH_GOOGLE_CLIENT_ID="${{ secrets.OAUTH_GOOGLE_CLIENT_ID }}" \
-
-            -e OAUTH_GITHUB_CLIENT_ID="${{ secrets.OAUTH_GITHUB_CLIENT_ID }}" \
-            -e OAUTH_GITHUB_CLIENT_SECRET="${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}" \
-            inksne/notif-hub-back-image pytest -v -s
 
   # deploy:
   #   runs-on: ubuntu-latest
