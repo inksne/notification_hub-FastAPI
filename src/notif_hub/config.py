@@ -1,10 +1,10 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel
 
 import os
 import logging
 from typing import Final
-
-from .basemodels import AuthJWT
+from pathlib import Path
 
 
 
@@ -39,7 +39,7 @@ class ConstantSettings(BaseSettings):
 
     EMAIL_SENDER_ADDRESS: Final[str]
     EMAIL_PASSWORD: Final[str]
-    EMAIL_SUBJECT: str = '🔔 Сообщение с Notification Hub'
+    EMAIL_SUBJECT: str = "🔔 Сообщение с Notification Hub"
     EMAIL_HOST: str = "smtp.yandex.ru"
     EMAIL_PORT: int = 465
 
@@ -47,7 +47,15 @@ class ConstantSettings(BaseSettings):
     ACCESS_TOKEN_TYPE: str = "access"
     REFRESH_TOKEN_TYPE: str = "refresh"
 
-    APP_VERSION: str = "0.1.18"
+    PATH_TO_SERVER_CRT: str = "/app/src/notif_hub/certs/server.crt"
+    PATH_TO_SERVER_KEY: str = "/app/src/notif_hub/certs/server.key"
+
+    UVICORN_APP: str = "src.notif_hub.main:app"
+    UVICORN_HOST: str = "0.0.0.0"
+    UVICORN_PORT: int = 8000
+
+    APP_TITLE: str = "Notification Hub"
+    APP_VERSION: str = "0.1.19"
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(__file__), '..', '..', '.env'),
@@ -61,6 +69,14 @@ class DBSettings(BaseSettings):
     db_url: str = f'postgresql+asyncpg://{constant_settings.POSTGRES_USER}:{constant_settings.POSTGRES_PASSWORD}@{constant_settings.POSTGRES_HOST}:5432/{constant_settings.POSTGRES_DB}'
 
 db_settings = DBSettings()
+
+
+class AuthJWT(BaseModel):
+    private_key_path: Path = Path("src/notif_hub/certs") / "jwt-private.pem"
+    public_key_path: Path = Path("src/notif_hub/certs") / "jwt-public.pem"
+    algorithm: str = "RS256"
+    access_token_expire_minutes: int = 3
+    refresh_token_expire_days: int = 30
 
 
 class AuthSettings(BaseSettings):
