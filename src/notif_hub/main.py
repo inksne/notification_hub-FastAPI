@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title='Notification Hub', version=constant_settings.APP_VERSION, lifespan=lifespan)
+app = FastAPI(title=constant_settings.APP_TITLE, version=constant_settings.APP_VERSION, lifespan=lifespan)
 
 
 app.add_middleware(
@@ -50,7 +50,13 @@ async def start_bot():
 
 async def main():
     dp.include_router(commands_router)
-    uvicorn_config = uvicorn.Config("src.notif_hub.main:app", host="0.0.0.0", port=8000)
+    uvicorn_config = uvicorn.Config(
+        constant_settings.UVICORN_APP,
+        host=constant_settings.UVICORN_HOST,
+        port=constant_settings.UVICORN_PORT,
+        ssl_certfile=constant_settings.PATH_TO_SERVER_CRT,
+        ssl_keyfile=constant_settings.PATH_TO_SERVER_KEY,
+    )
     server = uvicorn.Server(uvicorn_config)
 
     await asyncio.gather(start_bot(), server.serve())
