@@ -1,0 +1,74 @@
+services:
+  back:
+    image: inksne/notif-hub-back-image:latest
+    container_name: back-container
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./.env
+    command: ["sh", "-c", "cd src/notif_hub && alembic upgrade head && cd ../.. && python -m src.notif_hub.main"]
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # maildev:
+  #   image: maildev/maildev
+  #   environment:
+  #     - TZ=Europe/Moscow
+  #     - MAILDEV_WEB_PORT=1080
+  #     - MAILDEV_SMTP_PORT=1025
+  #   ports:
+  #     - "1080:1080"
+  #     - "1025:1025"
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "1m"
+  #   networks:
+  #     - app-network
+
+  postgres:
+    image: postgres:alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+    networks:
+      - app-network
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+    networks:
+      - app-network
+
+volumes:
+  postgres-data:
+
+networks:
+  app-network:
